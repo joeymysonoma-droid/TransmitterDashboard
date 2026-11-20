@@ -1,0 +1,138 @@
+# ASMG TX Dashboard - transmitter list
+# Nautel VS/VX: set host + snmp_community (SNMP UDP 161).
+# GatesAir Flexiva: set host (+ optional http_username/password); polls HTTP /json.
+# AAT FM: SNMP enterprise 51550 (optional http_username/password for GUI).
+# Crown/Ecreso (Audemat FmNgIp): http_username/password for /wscom (default Admin/admin).
+
+poll_interval_seconds: 30
+history_retention_days: 90
+history_min_interval_seconds: 60
+http_host: "0.0.0.0"
+http_port: 8090
+snmp_timeout_seconds: 5
+snmp_retries: 2
+
+# Alerts: dashboard banner is always on. Email is optional.
+# Per-TX overrides go under each transmitter's `alerts:` block.
+alerts:
+  email_enabled: false
+  smtp_host: ""
+  smtp_port: 587
+  smtp_username: ""
+  smtp_password: ""
+  smtp_tls: true
+  email_from: ""
+  email_to: []                 # e.g. ["you@sonoma.com"]
+  cooldown_minutes: 30
+  unreachable_polls: 3         # polls before offline alert
+  on_unreachable: true
+  on_rf_off: true
+  on_tx_alarms: true
+  vswr: 1.5                    # set null to disable
+  reflected_w: null
+  heatsink_c: 70.0
+  forward_min_w: null          # prefer per-TX values below
+  skip_unconfigured: true      # ignore blank VX hosts
+
+transmitters:
+  - id: vs300-1
+    name: "KZST Exciter"
+    model: vs300
+    host: "10.2.10.52"
+    snmp_community: public
+    snmp_port: 161
+    location: "Mt. Taylor"
+    alerts:
+      forward_min_w: 12         # ~24 W normal
+      reflected_w: 2.0
+      vswr: 1.5
+      heatsink_c: 65.0
+
+  - id: vs300-2
+    name: "KJZY Exciter"
+    model: vs300
+    host: "10.2.10.53"
+    snmp_community: public
+    snmp_port: 161
+    location: "Mt. Taylor"
+    alerts:
+      forward_min_w: 12
+      reflected_w: 2.0
+      vswr: 1.5
+      heatsink_c: 65.0
+
+  - id: aat-kjzy
+    name: "KJZY Main (AAT)"
+    model: aat
+    host: "10.2.10.58"
+    snmp_community: public
+    snmp_port: 161
+    http_username: admin
+    http_password: resRad10
+    location: "Mt. Taylor"
+    alerts:
+      forward_min_w: 1000       # ~3.6 kW normal
+      reflected_w: 150.0
+      vswr: 1.5
+      heatsink_c: 70.0
+
+  - id: vs300-3
+    name: "KZST HD TX"
+    model: vs300
+    host: "10.2.10.56"
+    snmp_community: public
+    snmp_port: 161
+    location: "Mt. Taylor"
+    alerts:
+      forward_min_w: 40         # ~58 W normal
+      reflected_w: 5.0
+      vswr: 1.5
+      heatsink_c: 70.0
+
+  - id: flexiva-1
+    name: "The Bull 99.1 TX"
+    model: flexiva
+    host: "10.2.10.152"
+    http_port: 80
+    http_username: gates
+    http_password: gates
+    location: "Mt. Taylor"
+    alerts:
+      forward_min_w: 200        # ~490 W observed
+      reflected_w: 25.0
+      vswr: 1.5
+      heatsink_c: 70.0
+
+  - id: crown-1
+    name: "KSRO 103.5 TX"
+    model: crown
+    host: "10.2.10.106"
+    http_username: Admin
+    http_password: admin
+    location: ""
+    alerts:
+      forward_min_w: 150        # ~250 W observed (H03)
+      reflected_w: 20.0
+      vswr: 1.5
+      heatsink_c: 70.0
+
+  - id: vx25
+    name: "VX2.5"
+    model: vx
+    host: ""
+    snmp_community: public
+    snmp_port: 161
+    location: ""
+
+  - id: vx2
+    name: "KVRV Main"
+    model: vx
+    host: "10.6.10.205"
+    snmp_community: public
+    snmp_port: 161
+    location: "Mt Jackson"
+    alerts:
+      forward_min_w: 1000      # ~1.8 kW observed
+      reflected_w: 80.0
+      vswr: 1.5
+      heatsink_c: 85.0

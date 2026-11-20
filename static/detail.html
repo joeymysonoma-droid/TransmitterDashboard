@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transmitter Detail — ASMG TX Dashboard</title>
+  <link rel="stylesheet" href="/static/styles.css?v=4">
+</head>
+<body data-page="detail">
+  <div class="container">
+    <header>
+      <div>
+        <div class="breadcrumb"><a href="/">← Fleet</a></div>
+        <h1 id="tx-name">Transmitter</h1>
+        <p class="sub" id="tx-meta"></p>
+      </div>
+      <div class="actions">
+        <span id="tx-status"></span>
+        <a id="aui-link" class="btn" href="#" target="_blank" rel="noopener" hidden>Open AUI</a>
+        <a id="csv-link" class="btn" href="#">Export CSV</a>
+        <button id="refresh-btn" class="primary" type="button">Poll now</button>
+      </div>
+    </header>
+
+    <p id="tx-error" class="error-text" hidden></p>
+
+    <div class="detail-layout">
+      <section class="panel">
+        <h2>Live meters</h2>
+        <div id="meters" class="meter-groups"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Alarms</h2>
+        <ul id="alarms" class="alarms"></ul>
+      </section>
+
+      <section class="panel">
+        <h2>History</h2>
+        <div class="range-tabs">
+          <button type="button" data-range="1h">1h</button>
+          <button type="button" class="active" data-range="24h">24h</button>
+          <button type="button" data-range="7d">7d</button>
+          <button type="button" data-range="30d">30d</button>
+        </div>
+
+        <div class="chart-grid">
+          <div class="chart-wrap">
+            <p class="sub" style="margin-bottom:0.35rem">Forward power</p>
+            <canvas id="chart-fwd" height="180"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <p class="sub" style="margin-bottom:0.35rem">Reflected power</p>
+            <canvas id="chart-rfl" height="180"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <p class="sub" style="margin-bottom:0.35rem">VSWR</p>
+            <canvas id="chart-vswr" height="180"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <p class="sub" style="margin-bottom:0.35rem">Heatsink temperature</p>
+            <canvas id="chart-temp" height="180"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <p class="sub" style="margin-bottom:0.35rem">PA volts</p>
+            <canvas id="chart-pa-v" height="180"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <p class="sub" style="margin-bottom:0.35rem">PA 1 current</p>
+            <canvas id="chart-pa-i" height="180"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <p class="sub" style="margin-bottom:0.35rem">+48V (LVPS)</p>
+            <canvas id="chart-48v" height="180"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <p class="sub" style="margin-bottom:0.35rem">Fan 1 RPM</p>
+            <canvas id="chart-fan" height="180"></canvas>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script src="/static/app.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,4345 @@
+NAUTEL-TC-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+  MODULE-IDENTITY, enterprises 	FROM SNMPv2-SMI
+  TEXTUAL-CONVENTION 			FROM SNMPv2-TC;
+
+nautel MODULE-IDENTITY
+  LAST-UPDATED "202509221046Z"
+  ORGANIZATION "www.nautel.com"
+  CONTACT-INFO
+  "postal: Nautel Limited
+		   10089 Peggy's Cove Road
+		   Hackett's Cove NS  B3Z 3J4
+		   Canada
+   
+   email:  support@nautel.com"
+  DESCRIPTION  "Add new MeterInteger syntax and update other descriptions to indicate N/A values for meters. Remove integer ranges for meter syntax."
+  REVISION    "202509221046Z"
+  DESCRIPTION  "Fix naming for vx6 in VxTransmitterType syntax"
+  REVISION     "202504171356Z"
+  DESCRIPTION  "Fix MODULE-IDENTITY latest revision to match LAST-UPDATED timestamp
+                Ensure all TEXTUAL-CONVENTION syntax's are lowercase"
+  REVISION     "202305111115Z"
+  DESCRIPTION  "Include textual-convention VsTransmitterType, VsExciterType"
+  REVISION     "202303031126Z"
+  DESCRIPTION  "Include Net-Snmp generated MIB's as part of our product MIB to allow for translations"
+  REVISION     "202203041810Z"
+  DESCRIPTION  "Generate list of MIB revisions when generating product MIB module"
+  REVISION     "202111090000Z"
+  DESCRIPTION  "Group products together when generating MIB"
+  REVISION     "201809130000Z"
+  DESCRIPTION  "Changed nodes beneath nautel to comply with MIB standards"
+  REVISION     "201809120000Z"
+  DESCRIPTION  "Top-level infrastructure of the Nautel enterprise MIB tree"
+  REVISION     "201802150000Z"
+  DESCRIPTION  "Correcting syntax"
+  REVISION     "201611290000Z"
+  DESCRIPTION  "Fixing the definition of the TrueFalse data type"
+  REVISION     "201205180000Z"
+  DESCRIPTION  "First draft"
+  ::= { enterprises 28142 }
+
+--
+-- Textual Conventions
+--
+
+MeterInteger ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT 	"d"
+	STATUS		current
+	DESCRIPTION		"An integer to be displayed as is;
+				i.e. 12345 displayed as 12345;
+				A value of -2147483648 indicates the value is N/A"
+	SYNTAX		INTEGER
+
+Tenths ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT 	"d-1"
+	STATUS		current
+	DESCRIPTION		"An integer to be displayed with 1 decimal place;
+				i.e. 12345 displayed as 1234.5;
+				A value of -2147483648 indicates the value is N/A"
+	SYNTAX		INTEGER
+
+Hundredths ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT 	"d-2"
+	STATUS		current
+	DESCRIPTION		"An integer to be displayed with 2 decimal places;
+				i.e. 12345 displayed as 123.45;
+				A value of -2147483648 indicates the value is N/A"
+	SYNTAX		INTEGER
+
+Thousandths ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT 	"d-3"
+	STATUS		current
+	DESCRIPTION		"An integer to be displayed with 3 decimal places;
+				i.e. 12345 displayed as 12.345;
+				A value of -2147483648 indicates the value is N/A"
+	SYNTAX		INTEGER
+
+Millionths ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT 	"d-6"
+	STATUS		current
+	DESCRIPTION		"An integer to be displayed with 6 decimal places;
+				i.e. 12345 displayed as .012345;
+				A value of -2147483648 indicates the value is N/A"
+	SYNTAX		INTEGER
+
+OnOff ::= TEXTUAL-CONVENTION
+	STATUS		current
+	DESCRIPTION		"On or off state for alarms"
+	SYNTAX		INTEGER { off(0), on(1) }
+
+RfState ::= TEXTUAL-CONVENTION
+	STATUS		current
+	DESCRIPTION		"RF state"
+	SYNTAX		INTEGER { off(0), on(1), inhibited(2) }
+
+LocalRemote ::= TEXTUAL-CONVENTION
+	STATUS		current
+	DESCRIPTION		"Local or remote access"
+	SYNTAX		INTEGER { local(0), remote(1) }
+
+AorB ::= TEXTUAL-CONVENTION
+	STATUS		current
+	DESCRIPTION		"Exciter A or B"
+	SYNTAX		INTEGER { a(0), b(1) }
+
+CombinerRoutingStatus ::= TEXTUAL-CONVENTION
+	STATUS		current
+	DESCRIPTION		"Combiner Mode Idle/Test/Combined/In-Transit"
+	SYNTAX		INTEGER { idle(0), test(1), combiner(2), inTransit(3) }
+
+OpenClosed ::= TEXTUAL-CONVENTION
+	STATUS		current
+	DESCRIPTION		"Interlock state"
+	SYNTAX		INTEGER { closed(0), open(1) }
+
+YesNo ::= TEXTUAL-CONVENTION
+	STATUS		current
+	DESCRIPTION		"Interlock state"
+	SYNTAX		INTEGER { no(0), yes(1) }
+
+TrueFalse ::= TEXTUAL-CONVENTION
+	STATUS		current
+	DESCRIPTION		"Definition of true/false"
+	SYNTAX		INTEGER { true(1), false(0) }
+
+VsTransmitterType ::= TEXTUAL-CONVENTION
+	STATUS		current
+	DESCRIPTION		"VS Transmitter Model"
+	SYNTAX		INTEGER { vs300(0), vs1K(1), vs2500(2), vs3K(3) }
+
+VsExciterType ::= TEXTUAL-CONVENTION
+	STATUS		current
+	DESCRIPTION		"VS Exciter Model"
+	SYNTAX		INTEGER { internal(0), external(1), hd(2) }
+
+VxTransmitterType ::= TEXTUAL-CONVENTION
+	STATUS		current
+	DESCRIPTION		"VX Transmitter Model"
+	SYNTAX		INTEGER { unlicensed(0), vx150(1), vx300(2), vx600(3), vx1(4), vx1500(5), vx2(6), vx3(7), vx3500(8), vx4(9), vx5(10), vx6(11) }
+
+HdExciterType ::= TEXTUAL-CONVENTION
+	STATUS		current
+	DESCRIPTION		"HD Exciter Model"
+	SYNTAX		INTEGER { a(0), b(1) }
+
+
+END
+NAUTEL-VX-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+  MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, OBJECT-IDENTITY FROM SNMPv2-SMI
+  OBJECT-GROUP, NOTIFICATION-GROUP FROM SNMPv2-CONF
+  TEXTUAL-CONVENTION FROM SNMPv2-TC
+  nautel, MeterInteger, Tenths, Hundredths, Thousandths, RfState, Millionths, LocalRemote, OnOff, AorB, OpenClosed, TrueFalse, YesNo, 
+  TrueFalse, VsTransmitterType, VsExciterType, VxTransmitterType, HdExciterType FROM NAUTEL-TC-MIB;
+
+nautelVXMIB MODULE-IDENTITY
+  LAST-UPDATED "202509221046Z"
+  ORGANIZATION "www.nautel.com"
+  CONTACT-INFO
+  "postal: Nautel Limited
+           10089 Peggy's Cove Road
+           Hackett's Cove NS  B3Z 3J4
+           Canada   
+   email:  support@nautel.com"
+  DESCRIPTION  "Use Device ID as part of the device tree node to allow for different device tree's to be available"
+  REVISION    "202509221046Z"
+  DESCRIPTION  "Add descriptions for top level structure device nodes"
+  REVISION    "202310251957Z"
+  DESCRIPTION  "Include all VX models into 1 VX product mib"
+  REVISION    "202307310823Z"
+  DESCRIPTION  "Fix grouping of objects by device"
+  REVISION    "202305111115Z"
+  DESCRIPTION  "Fix MODULE-IDENTITY latest revision to match LAST-UPDATED timestamp
+                import missing textual-conventions"
+  REVISION    "202304111419Z"
+  DESCRIPTION  "Generate mib modules based on transmitter product line (Seperate VX mib modules for kona/hilo)"
+  REVISION    "202303031640Z"
+  DESCRIPTION  "Add mib modules for models VX3, VX3.5, VX4, VX5, VX6"
+  REVISION    "202301070000Z"
+  DESCRIPTION  "Add mib modules for models VX1, VX2"
+  REVISION    "202208180925Z"
+  DESCRIPTION  "Generate list of MIB revisions when generating product MIB module"
+  REVISION    "201809150000Z"
+  DESCRIPTION "The MIB for Nautel VX systems"
+  REVISION    "201809140000Z"
+  DESCRIPTION "Initial release: Auto generated"
+  ::= { nautel 753915 }
+
+
+--
+-- Top Level Structure
+--
+
+vxNotifications OBJECT IDENTIFIER ::= { nautelVXMIB 0 }
+vxObjects OBJECT IDENTIFIER ::= { nautelVXMIB 1 }
+vxConformance OBJECT IDENTIFIER ::= { nautelVXMIB 2 }
+vxCurrent OBJECT IDENTIFIER ::= { vxConformance 0 }
+vxDeprecated OBJECT IDENTIFIER ::= { vxConformance 1 }
+vxSib OBJECT-IDENTITY
+    STATUS current
+    DESCRIPTION
+        "Sib device applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxObjects 672838144 }
+
+vxSibTrap OBJECT-IDENTITY
+    STATUS current
+    DESCRIPTION
+        "Sib traps applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxNotifications 672838144 }
+
+vxController OBJECT-IDENTITY
+    STATUS current
+    DESCRIPTION
+        "Controller device applicable for all VX models"
+  ::= { vxObjects 365761128 }
+
+vxControllerTrap OBJECT-IDENTITY
+    STATUS current
+    DESCRIPTION
+        "Controller traps applicable for all VX models"
+  ::= { vxNotifications 365761128 }
+
+vxAab OBJECT-IDENTITY
+    STATUS current
+    DESCRIPTION
+        "Analog Audio Board applicable for all VX models"
+  ::= { vxObjects 942681128 }
+
+vxAabTrap OBJECT-IDENTITY
+    STATUS current
+    DESCRIPTION
+        "Analog Audio Board traps applicable for all VX models"
+  ::= { vxNotifications 942681128 }
+
+vxEcsib OBJECT-IDENTITY
+    STATUS current
+    DESCRIPTION
+        "Ecsib device applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxObjects 675064144 }
+
+vxEcsibTrap OBJECT-IDENTITY
+    STATUS current
+    DESCRIPTION
+        "Ecsib traps applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6"
+  ::= { vxNotifications 675064144 }
+
+vxVstc OBJECT-IDENTITY
+    STATUS current
+    DESCRIPTION
+        "Transfer Controller (Vstc) only applicable when using VS-TC."
+  ::= { vxObjects 730314146 }
+
+vxVstcTrap OBJECT-IDENTITY
+    STATUS current
+    DESCRIPTION
+        "Transfer Controller traps only applicable when using VS-TC."
+  ::= { vxNotifications 730314146 }
+
+vxPsib OBJECT-IDENTITY
+    STATUS current
+    DESCRIPTION
+        "Psib device applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxObjects 506993145 }
+
+vxPsibTrap OBJECT-IDENTITY
+    STATUS current
+    DESCRIPTION
+        "Psib traps applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxNotifications 506993145 }
+
+
+--
+-- Group definitions
+--
+
+vxCurrentObjects OBJECT-GROUP
+    OBJECTS {
+        vxPsibAlarmPsANotCompatible,
+        vxPsibAlarmPsANotInstalled,
+        vxPsibAlarmPsBNotInstalled,
+        vxPsibAlarmSwrShutback,
+        vxPsibAlarmPsCNotInstalled,
+        vxPsibAlarmPsANotCommunicating,
+        vxPsibAlarmPsBNotCommunicating,
+        vxPsibAlarmPsCNotCommunicating,
+        vxPsibAlarmPsBNotCompatible,
+        vxPsibAlarmPsCNotCompatible,
+        vxPsibAlarmPsAFail,
+        vxPsibAlarmPsBFail,
+        vxPsibAlarmPsCFail,
+        vxPsibAlarmPa1Fail,
+        vxPsibAlarmPa2Fail,
+        vxPsibAlarmPa3Fail,
+        vxPsibAlarmPa4Fail,
+        vxPsibAlarmPa5Fail,
+        vxPsibAlarmPa6Fail,
+        vxPsibAlarmFan1Fail,
+        vxPsibAlarmFan2Fail,
+        vxPsibAlarmFan3Fail,
+        vxPsibAlarmFan4Fail,
+        vxPsibAlarmFan5Fail,
+        vxPsibAlarmFan1LowSpeed,
+        vxPsibAlarmFan2LowSpeed,
+        vxPsibAlarmFan3LowSpeed,
+        vxPsibAlarmFan4LowSpeed,
+        vxPsibAlarmFan5LowSpeed,
+        vxPsibAlarmNoExciterComms,
+        vxPsibAlarmRejectPowerShutback,
+        vxPsibMeterFan1Speed,
+        vxPsibMeterFan2Speed,
+        vxPsibMeterFan3Speed,
+        vxPsibMeterFan4Speed,
+        vxPsibMeterFan5Speed,
+        vxPsibMeterPlus3-3V,
+        vxPsibMeterPlus5V,
+        vxPsibMeterPlus12V,
+        vxVstcAlarmTx1CommunicationsFail,
+        vxVstcAlarmTx1OutputLow,
+        vxVstcAlarmTx2CommunicationsFail,
+        vxVstcAlarmTx2OutputLow,
+        vxVstcAlarmMainAesUnlocked,
+        vxVstcAlarmMainAesLow,
+        vxVstcAlarmBackupAesUnlocked,
+        vxVstcAlarmBackupAesLow,
+        vxVstcAlarmTx1Fail,
+        vxVstcAlarmTx2Fail,
+        vxVstcAlarmRfChangeover,
+        vxVstcAlarmAesChangeover,
+        vxVstcAlarmRelayPositionFail,
+        vxVstcAlarmRelayInterlockOpen,
+        vxVstcAlarmSystemInterlockOpen,
+        vxVstcAlarmPlus24VAFail,
+        vxVstcAlarmPlus24VBFail,
+        vxVstcAlarmPlus1-8VFail,
+        vxVstcAlarmPlus3-3VFail,
+        vxVstcAlarmPlus15VFail,
+        vxVstcAlarmDummyLoadInterlockOpen,
+        vxEcsibAlarmSwrShutback,
+        vxEcsibAlarmIpaFail,
+        vxEcsibAlarmFan2Fail,
+        vxEcsibAlarmFan2LowSpeed,
+        vxEcsibAlarmNoExciterComms,
+        vxEcsibMeterFan2Speed,
+        vxEcsibMeterPlus3-3V,
+        vxEcsibMeterPlus12V,
+        vxEcsibMeterInletTemp,
+        vxAabAlarmPlus12VFail,
+        vxAabAlarmDcVoltageFail,
+        vxAabAlarmAudioFailure,
+        vxAabMeterPlus5V,
+        vxAabMeterMinus8V,
+        vxAabMeterPlus8V,
+        vxAabMeterPlus12V,
+        vxControllerAlarmFpuiFailure,
+        vxControllerAlarmLowBackupAudioPlayerLeft,
+        vxControllerAlarmNeedToRunAutoBias,
+        vxControllerAlarmLowBackupAudioDmpx1,
+        vxControllerAlarmScInterlock,
+        vxControllerAlarmDcVoltageFail,
+        vxControllerAlarmHighAmbientTempShutback,
+        vxControllerAlarmLowAudioPlayerLeft,
+        vxControllerAlarmHostNetworkingDown,
+        vxControllerAlarmMissingExt10Mhz,
+        vxControllerAlarmPa3BiasFail,
+        vxControllerAlarmAudioProcessorOutputFail,
+        vxControllerAlarmLicensingFailure,
+        vxControllerAlarmPa4BiasFail,
+        vxControllerAlarmAutoBiasRunning,
+        vxControllerAlarmSwrShutdown,
+        vxControllerAlarmPresetError,
+        vxControllerAlarmMissingPresets,
+        vxControllerAlarmSummaryFault,
+        vxControllerAlarmFanFailShutback,
+        vxControllerAlarmInvalidDateTime,
+        vxControllerAlarmLowSca2AnalogRight,
+        vxControllerAlarmSummaryRfOutputFault,
+        vxControllerAlarmLowBackupAudioAes1Right,
+        vxControllerAlarmLowBackupAudioAnalogRight,
+        vxControllerAlarmLowAudioDmpx2,
+        vxControllerAlarmLowAudioDmpx1,
+        vxControllerAlarmLowAudioMpx1,
+        vxControllerAlarmExternalInterlock,
+        vxControllerAlarmUnsignedFpgaImage,
+        vxControllerAlarmPlus12VFail,
+        vxControllerAlarmHighForwardPower,
+        vxControllerAlarmLowForwardPower,
+        vxControllerAlarmVeryLowForwardPower,
+        vxControllerAlarmLowAudioAes2Right,
+        vxControllerAlarmLowAudioAes2Left,
+        vxControllerAlarmLowAudioAes1Right,
+        vxControllerAlarmLowAudioAes1Left,
+        vxControllerAlarmHighSwrShutdown,
+        vxControllerAlarmAudioProcessorOffline,
+        vxControllerAlarmPllUnlocked,
+        vxControllerAlarmPaHighPowerDissipationFoldback,
+        vxControllerAlarmAudioAnalogRightLow,
+        vxControllerAlarmLowACShutback,
+        vxControllerAlarmIpa2BiasFail,
+        vxControllerAlarmIpa1BiasFail,
+        vxControllerAlarmPa6BiasFail,
+        vxControllerAlarmHighHeatsinkTempShutdown,
+        vxControllerAlarmHighHeatsinkTempWarning,
+        vxControllerAlarmHighSwr,
+        vxControllerAlarmPa5BiasFail,
+        vxControllerAlarmPa2BiasFail,
+        vxControllerAlarmPa1BiasFail,
+        vxControllerAlarmAutoBiasFail,
+        vxControllerAlarmNoNameplateLicense,
+        vxControllerAlarmInvalidLicenses,
+        vxControllerAlarmMissingPtp1PPS,
+        vxControllerAlarmSwrCutback,
+        vxControllerAlarmLowAmbientTempWarning,
+        vxControllerAlarmMissingExt1PPS,
+        vxControllerAlarmFirmwareUpdateFailure,
+        vxControllerAlarmSwrFoldback,
+        vxControllerAlarmFpgaFailure,
+        vxControllerAlarmSib2CommFail,
+        vxControllerAlarmHostNotBooted,
+        vxControllerAlarmRfDriveLow,
+        vxControllerAlarmLowBackupAudioMpx2,
+        vxControllerAlarmLowBackupAudioPlayerRight,
+        vxControllerAlarmLowBackupAudioMpx1,
+        vxControllerAlarmLowAcInput,
+        vxControllerAlarmIpaPsFail,
+        vxControllerAlarmExciterBooted,
+        vxControllerAlarmHostNotResponding,
+        vxControllerAlarmUnlockAes2,
+        vxControllerAlarmUnlockAes1,
+        vxControllerAlarmUsingAudioBackup,
+        vxControllerAlarmModulationLossShutback,
+        vxControllerAlarmModulationLoss,
+        vxControllerAlarmLowSca2Aes2Left,
+        vxControllerAlarmLowSca1Aes1Left,
+        vxControllerAlarmLowSca1AnalogLeft,
+        vxControllerAlarmLowScaMpx1,
+        vxControllerAlarmLowBackupAudioDmpx2,
+        vxControllerAlarmLowBackupAudioAes2Right,
+        vxControllerAlarmLowBackupAudioAes2Left,
+        vxControllerAlarmLowBackupAudioAes1Left,
+        vxControllerAlarmHighRejectPowerShutdown,
+        vxControllerAlarmLowACFoldback,
+        vxControllerAlarmSummaryExciterFault,
+        vxControllerAlarmSibCommFail,
+        vxControllerAlarmConfigurationError,
+        vxControllerAlarmFirmwareUpdate,
+        vxControllerAlarmHighAmbientTempWarning,
+        vxControllerAlarmAudioAnalogLeftLow,
+        vxControllerAlarmLowAudioPlayerRight,
+        vxControllerAlarmLowScaMpx2,
+        vxControllerAlarmRfDriveHigh,
+        vxControllerAlarmPilotUnsynced,
+        vxControllerAlarmLowAudioMpx2,
+        vxControllerAlarmHighRejectPowerFoldback,
+        vxControllerAlarmLowBackupAudioAnalogLeft,
+        vxControllerAlarmRfSampleFault,
+        vxControllerAlarmExciterControllerSwrShutdown,
+        vxControllerAlarmPaFailFoldback,
+        vxControllerAlarmPsFailFoldback,
+        vxControllerAlarmPaPsFailShutdown,
+        vxControllerAlarmTemperatureSensorFailure,
+        vxControllerAlarmTransferCtrlCommFail,
+        vxControllerMeterForwardPower,
+        vxControllerMeterPa2Dissipation,
+        vxControllerMeterPa2Voltage,
+        vxControllerMeterPa2Current,
+        vxControllerMeterPa2BiasVoltage,
+        vxControllerMeterPlus2-5V,
+        vxControllerMeterTenMhzDeltaPpb,
+        vxControllerMeterPlus1-5V,
+        vxControllerMeterDcEfficiency,
+        vxControllerMeterDacGainScaler,
+        vxControllerMeterPpsDelta,
+        vxControllerMeterPlus12V,
+        vxControllerMeterVswr,
+        vxControllerMeterAveragePaVolts,
+        vxControllerMeterModulationPeak,
+        vxControllerMeterPa1Dissipation,
+        vxControllerMeterPlus5V,
+        vxControllerMeterPlus3-3V,
+        vxControllerMeterReflectedRmsPower,
+        vxControllerMeterTotalPaCurrent,
+        vxControllerMeterMpxRms,
+        vxControllerMeterPlus1-1V,
+        vxControllerMeterAnalogRight,
+        vxControllerMeterAnalogLeft,
+        vxControllerMeterRfDrivePower,
+        vxControllerMeterIpa1BiasVoltage,
+        vxControllerMeterMpx2,
+        vxControllerMeterMpx1,
+        vxControllerMeterAes2Left,
+        vxControllerMeterAes2Right,
+        vxControllerMeterAes1Left,
+        vxControllerMeterAes1Right,
+        vxControllerMeterAes1DMPX,
+        vxControllerMeterAes2DMPX,
+        vxControllerMeterAudioPlayerLeft,
+        vxControllerMeterAudioPlayerRight,
+        vxControllerMeterIpaVoltage,
+        vxControllerMeterHeatsinkTemp,
+        vxControllerMeterIpaCurrent,
+        vxControllerMeterPa1BiasVoltage,
+        vxControllerMeterPa1Voltage,
+        vxControllerMeterPa1Current,
+        vxControllerMeterPa3Dissipation,
+        vxControllerMeterPa4Dissipation,
+        vxControllerMeterPa5Dissipation,
+        vxControllerMeterPa6Dissipation,
+        vxControllerMeterPa3Voltage,
+        vxControllerMeterPa3Current,
+        vxControllerMeterPa4Voltage,
+        vxControllerMeterPa4Current,
+        vxControllerMeterPa5Voltage,
+        vxControllerMeterPa5Current,
+        vxControllerMeterPa6Voltage,
+        vxControllerMeterPa6Current,
+        vxControllerMeterIpa2BiasVoltage,
+        vxControllerMeterPa3BiasVoltage,
+        vxControllerMeterPa4BiasVoltage,
+        vxControllerMeterPa5BiasVoltage,
+        vxControllerMeterPa6BiasVoltage,
+        vxControllerMeterPsAInputVoltage,
+        vxControllerMeterPsBInputVoltage,
+        vxControllerMeterPsCInputVoltage,
+        vxControllerMeterIpaReflectedPower,
+        vxControllerMeterRejectPower,
+        vxControllerPowerSetpoint,
+        vxControllerCarrierFrequency,
+        vxControllerExternal10Mhz,
+        vxControllerActivePresetIdChannel,
+        vxControllerRfOnOff,
+        vxControllerLocalRemote,
+        vxControllerSchedulerOnOff,
+        vxControllerReset,
+        vxControllerTransmitterTypeChannelAddress,
+        vxControllerVswrShutdownOverrideEnable,
+        vxControllerVswrShutdownOverrideTimeoutReset,
+        vxSibAlarmFan1Fail,
+        vxSibAlarmNoExciterComms,
+        vxSibAlarmFan2LowSpeed,
+        vxSibAlarmFan1LowSpeed,
+        vxSibAlarmFan2Fail,
+        vxSibAlarmIpaFail,
+        vxSibAlarmPa2Fail,
+        vxSibAlarmPa1Fail,
+        vxSibAlarmPsAFail,
+        vxSibAlarmPsANotCompatible,
+        vxSibAlarmPsANotCommunicating,
+        vxSibAlarmSwrShutback,
+        vxSibAlarmPsANotInstalled,
+        vxSibMeterFan1Speed,
+        vxSibMeterFan2Speed,
+        vxSibMeterPlus3-3V,
+        vxSibMeterPlus12V,
+        vxSibMeterInletTemp
+    }
+    STATUS current
+    DESCRIPTION
+        "Group of current objects"
+  ::= { vxCurrent 1 }
+
+vxCurrentTraps NOTIFICATION-GROUP
+    NOTIFICATIONS {
+        vxPsibAlarmPsANotCompatibleTrap,
+        vxPsibAlarmPsANotInstalledTrap,
+        vxPsibAlarmPsBNotInstalledTrap,
+        vxPsibAlarmSwrShutbackTrap,
+        vxPsibAlarmPsCNotInstalledTrap,
+        vxPsibAlarmPsANotCommunicatingTrap,
+        vxPsibAlarmPsBNotCommunicatingTrap,
+        vxPsibAlarmPsCNotCommunicatingTrap,
+        vxPsibAlarmPsBNotCompatibleTrap,
+        vxPsibAlarmPsCNotCompatibleTrap,
+        vxPsibAlarmPsAFailTrap,
+        vxPsibAlarmPsBFailTrap,
+        vxPsibAlarmPsCFailTrap,
+        vxPsibAlarmPa1FailTrap,
+        vxPsibAlarmPa2FailTrap,
+        vxPsibAlarmPa3FailTrap,
+        vxPsibAlarmPa4FailTrap,
+        vxPsibAlarmPa5FailTrap,
+        vxPsibAlarmPa6FailTrap,
+        vxPsibAlarmFan1FailTrap,
+        vxPsibAlarmFan2FailTrap,
+        vxPsibAlarmFan3FailTrap,
+        vxPsibAlarmFan4FailTrap,
+        vxPsibAlarmFan5FailTrap,
+        vxPsibAlarmFan1LowSpeedTrap,
+        vxPsibAlarmFan2LowSpeedTrap,
+        vxPsibAlarmFan3LowSpeedTrap,
+        vxPsibAlarmFan4LowSpeedTrap,
+        vxPsibAlarmFan5LowSpeedTrap,
+        vxPsibAlarmNoExciterCommsTrap,
+        vxPsibAlarmRejectPowerShutbackTrap,
+        vxVstcAlarmTx1CommunicationsFailTrap,
+        vxVstcAlarmTx1OutputLowTrap,
+        vxVstcAlarmTx2CommunicationsFailTrap,
+        vxVstcAlarmTx2OutputLowTrap,
+        vxVstcAlarmMainAesUnlockedTrap,
+        vxVstcAlarmMainAesLowTrap,
+        vxVstcAlarmBackupAesUnlockedTrap,
+        vxVstcAlarmBackupAesLowTrap,
+        vxVstcAlarmTx1FailTrap,
+        vxVstcAlarmTx2FailTrap,
+        vxVstcAlarmRfChangeoverTrap,
+        vxVstcAlarmAesChangeoverTrap,
+        vxVstcAlarmRelayPositionFailTrap,
+        vxVstcAlarmRelayInterlockOpenTrap,
+        vxVstcAlarmSystemInterlockOpenTrap,
+        vxVstcAlarmPlus24VAFailTrap,
+        vxVstcAlarmPlus24VBFailTrap,
+        vxVstcAlarmPlus1-8VFailTrap,
+        vxVstcAlarmPlus3-3VFailTrap,
+        vxVstcAlarmPlus15VFailTrap,
+        vxVstcAlarmDummyLoadInterlockOpenTrap,
+        vxEcsibAlarmSwrShutbackTrap,
+        vxEcsibAlarmIpaFailTrap,
+        vxEcsibAlarmFan2FailTrap,
+        vxEcsibAlarmFan2LowSpeedTrap,
+        vxEcsibAlarmNoExciterCommsTrap,
+        vxAabAlarmPlus12VFailTrap,
+        vxAabAlarmDcVoltageFailTrap,
+        vxAabAlarmAudioFailureTrap,
+        vxControllerAlarmFpuiFailureTrap,
+        vxControllerAlarmLowBackupAudioPlayerLeftTrap,
+        vxControllerAlarmNeedToRunAutoBiasTrap,
+        vxControllerAlarmLowBackupAudioDmpx1Trap,
+        vxControllerAlarmScInterlockTrap,
+        vxControllerAlarmDcVoltageFailTrap,
+        vxControllerAlarmHighAmbientTempShutbackTrap,
+        vxControllerAlarmLowAudioPlayerLeftTrap,
+        vxControllerAlarmHostNetworkingDownTrap,
+        vxControllerAlarmMissingExt10MhzTrap,
+        vxControllerAlarmPa3BiasFailTrap,
+        vxControllerAlarmAudioProcessorOutputFailTrap,
+        vxControllerAlarmLicensingFailureTrap,
+        vxControllerAlarmPa4BiasFailTrap,
+        vxControllerAlarmAutoBiasRunningTrap,
+        vxControllerAlarmSwrShutdownTrap,
+        vxControllerAlarmPresetErrorTrap,
+        vxControllerAlarmMissingPresetsTrap,
+        vxControllerAlarmSummaryFaultTrap,
+        vxControllerAlarmFanFailShutbackTrap,
+        vxControllerAlarmInvalidDateTimeTrap,
+        vxControllerAlarmLowSca2AnalogRightTrap,
+        vxControllerAlarmSummaryRfOutputFaultTrap,
+        vxControllerAlarmLowBackupAudioAes1RightTrap,
+        vxControllerAlarmLowBackupAudioAnalogRightTrap,
+        vxControllerAlarmLowAudioDmpx2Trap,
+        vxControllerAlarmLowAudioDmpx1Trap,
+        vxControllerAlarmLowAudioMpx1Trap,
+        vxControllerAlarmExternalInterlockTrap,
+        vxControllerAlarmUnsignedFpgaImageTrap,
+        vxControllerAlarmPlus12VFailTrap,
+        vxControllerAlarmHighForwardPowerTrap,
+        vxControllerAlarmLowForwardPowerTrap,
+        vxControllerAlarmVeryLowForwardPowerTrap,
+        vxControllerAlarmLowAudioAes2RightTrap,
+        vxControllerAlarmLowAudioAes2LeftTrap,
+        vxControllerAlarmLowAudioAes1RightTrap,
+        vxControllerAlarmLowAudioAes1LeftTrap,
+        vxControllerAlarmHighSwrShutdownTrap,
+        vxControllerAlarmAudioProcessorOfflineTrap,
+        vxControllerAlarmPllUnlockedTrap,
+        vxControllerAlarmPaHighPowerDissipationFoldbackTrap,
+        vxControllerAlarmAudioAnalogRightLowTrap,
+        vxControllerAlarmLowACShutbackTrap,
+        vxControllerAlarmIpa2BiasFailTrap,
+        vxControllerAlarmIpa1BiasFailTrap,
+        vxControllerAlarmPa6BiasFailTrap,
+        vxControllerAlarmHighHeatsinkTempShutdownTrap,
+        vxControllerAlarmHighHeatsinkTempWarningTrap,
+        vxControllerAlarmHighSwrTrap,
+        vxControllerAlarmPa5BiasFailTrap,
+        vxControllerAlarmPa2BiasFailTrap,
+        vxControllerAlarmPa1BiasFailTrap,
+        vxControllerAlarmAutoBiasFailTrap,
+        vxControllerAlarmNoNameplateLicenseTrap,
+        vxControllerAlarmInvalidLicensesTrap,
+        vxControllerAlarmMissingPtp1PPSTrap,
+        vxControllerAlarmSwrCutbackTrap,
+        vxControllerAlarmLowAmbientTempWarningTrap,
+        vxControllerAlarmMissingExt1PPSTrap,
+        vxControllerAlarmFirmwareUpdateFailureTrap,
+        vxControllerAlarmSwrFoldbackTrap,
+        vxControllerAlarmFpgaFailureTrap,
+        vxControllerAlarmSib2CommFailTrap,
+        vxControllerAlarmHostNotBootedTrap,
+        vxControllerAlarmRfDriveLowTrap,
+        vxControllerAlarmLowBackupAudioMpx2Trap,
+        vxControllerAlarmLowBackupAudioPlayerRightTrap,
+        vxControllerAlarmLowBackupAudioMpx1Trap,
+        vxControllerAlarmLowAcInputTrap,
+        vxControllerAlarmIpaPsFailTrap,
+        vxControllerAlarmExciterBootedTrap,
+        vxControllerAlarmHostNotRespondingTrap,
+        vxControllerAlarmUnlockAes2Trap,
+        vxControllerAlarmUnlockAes1Trap,
+        vxControllerAlarmUsingAudioBackupTrap,
+        vxControllerAlarmModulationLossShutbackTrap,
+        vxControllerAlarmModulationLossTrap,
+        vxControllerAlarmLowSca2Aes2LeftTrap,
+        vxControllerAlarmLowSca1Aes1LeftTrap,
+        vxControllerAlarmLowSca1AnalogLeftTrap,
+        vxControllerAlarmLowScaMpx1Trap,
+        vxControllerAlarmLowBackupAudioDmpx2Trap,
+        vxControllerAlarmLowBackupAudioAes2RightTrap,
+        vxControllerAlarmLowBackupAudioAes2LeftTrap,
+        vxControllerAlarmLowBackupAudioAes1LeftTrap,
+        vxControllerAlarmHighRejectPowerShutdownTrap,
+        vxControllerAlarmLowACFoldbackTrap,
+        vxControllerAlarmSummaryExciterFaultTrap,
+        vxControllerAlarmSibCommFailTrap,
+        vxControllerAlarmConfigurationErrorTrap,
+        vxControllerAlarmFirmwareUpdateTrap,
+        vxControllerAlarmHighAmbientTempWarningTrap,
+        vxControllerAlarmAudioAnalogLeftLowTrap,
+        vxControllerAlarmLowAudioPlayerRightTrap,
+        vxControllerAlarmLowScaMpx2Trap,
+        vxControllerAlarmRfDriveHighTrap,
+        vxControllerAlarmPilotUnsyncedTrap,
+        vxControllerAlarmLowAudioMpx2Trap,
+        vxControllerAlarmHighRejectPowerFoldbackTrap,
+        vxControllerAlarmLowBackupAudioAnalogLeftTrap,
+        vxControllerAlarmRfSampleFaultTrap,
+        vxControllerAlarmExciterControllerSwrShutdownTrap,
+        vxControllerAlarmPaFailFoldbackTrap,
+        vxControllerAlarmPsFailFoldbackTrap,
+        vxControllerAlarmPaPsFailShutdownTrap,
+        vxControllerAlarmTemperatureSensorFailureTrap,
+        vxControllerAlarmTransferCtrlCommFailTrap,
+        vxControllerSchedulerOnOffTrap,
+        vxSibAlarmFan1FailTrap,
+        vxSibAlarmNoExciterCommsTrap,
+        vxSibAlarmFan2LowSpeedTrap,
+        vxSibAlarmFan1LowSpeedTrap,
+        vxSibAlarmFan2FailTrap,
+        vxSibAlarmIpaFailTrap,
+        vxSibAlarmPa2FailTrap,
+        vxSibAlarmPa1FailTrap,
+        vxSibAlarmPsAFailTrap,
+        vxSibAlarmPsANotCompatibleTrap,
+        vxSibAlarmPsANotCommunicatingTrap,
+        vxSibAlarmSwrShutbackTrap,
+        vxSibAlarmPsANotInstalledTrap
+    }
+    STATUS current
+    DESCRIPTION
+        "Group of current traps"
+  ::= { vxCurrent 2 }
+
+--
+-- Resource definitions
+--
+
+vxPsibAlarmPsANotCompatible OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS A Not Compatible. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1287 }
+
+vxPsibAlarmPsANotInstalled OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS A Not Installed. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1281 }
+
+vxPsibAlarmPsBNotInstalled OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS B Not Installed. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1282 }
+
+vxPsibAlarmSwrShutback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SWR Shutback. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1280 }
+
+vxPsibAlarmPsCNotInstalled OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS C Not Installed. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1283 }
+
+vxPsibAlarmPsANotCommunicating OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS A Not Communicating. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1284 }
+
+vxPsibAlarmPsBNotCommunicating OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS B Not Communicating. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1285 }
+
+vxPsibAlarmPsCNotCommunicating OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS C Not Communicating. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1286 }
+
+vxPsibAlarmPsBNotCompatible OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS B Not Compatible. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1288 }
+
+vxPsibAlarmPsCNotCompatible OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS C Not Compatible. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1289 }
+
+vxPsibAlarmPsAFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS A Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1290 }
+
+vxPsibAlarmPsBFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS B Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1291 }
+
+vxPsibAlarmPsCFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS C Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1292 }
+
+vxPsibAlarmPa1Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 1 Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1293 }
+
+vxPsibAlarmPa2Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 2 Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1294 }
+
+vxPsibAlarmPa3Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 3 Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1295 }
+
+vxPsibAlarmPa4Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 4 Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1296 }
+
+vxPsibAlarmPa5Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 5 Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1297 }
+
+vxPsibAlarmPa6Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 6 Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1298 }
+
+vxPsibAlarmFan1Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Amp Fan 1 Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1300 }
+
+vxPsibAlarmFan2Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Amp Fan 2 Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1301 }
+
+vxPsibAlarmFan3Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Amp Fan 3 Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1302 }
+
+vxPsibAlarmFan4Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Amp Fan 4 Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1303 }
+
+vxPsibAlarmFan5Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Amp Fan 5 Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1304 }
+
+vxPsibAlarmFan1LowSpeed OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Amp Fan 1 Low Speed. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1305 }
+
+vxPsibAlarmFan2LowSpeed OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Amp Fan 2 Low Speed. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1306 }
+
+vxPsibAlarmFan3LowSpeed OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Amp Fan 3 Low Speed. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1307 }
+
+vxPsibAlarmFan4LowSpeed OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Amp Fan 4 Low Speed. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1308 }
+
+vxPsibAlarmFan5LowSpeed OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Amp Fan 5 Low Speed. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1309 }
+
+vxPsibAlarmNoExciterComms OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Exciter Communication Failure. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1310 }
+
+vxPsibAlarmRejectPowerShutback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "High Reject Power Shutback. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 1311 }
+
+vxPsibMeterFan1Speed OBJECT-TYPE
+    SYNTAX MeterInteger
+    UNITS "rpm"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PSIB Fan 1 Speed. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 256 }
+
+vxPsibMeterFan2Speed OBJECT-TYPE
+    SYNTAX MeterInteger
+    UNITS "rpm"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PSIB Fan 2 Speed. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 257 }
+
+vxPsibMeterFan3Speed OBJECT-TYPE
+    SYNTAX MeterInteger
+    UNITS "rpm"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PSIB Fan 3 Speed. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 258 }
+
+vxPsibMeterFan4Speed OBJECT-TYPE
+    SYNTAX MeterInteger
+    UNITS "rpm"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PSIB Fan 4 Speed. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 259 }
+
+vxPsibMeterFan5Speed OBJECT-TYPE
+    SYNTAX MeterInteger
+    UNITS "rpm"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PSIB Fan 5 Speed. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 260 }
+
+vxPsibMeterPlus3-3V OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PSIB +3.3 VDC. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 261 }
+
+vxPsibMeterPlus5V OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PSIB +5 VDC. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 262 }
+
+vxPsibMeterPlus12V OBJECT-TYPE
+    SYNTAX Tenths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PSIB +12 VDC. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxPsib 263 }
+
+vxVstcAlarmTx1CommunicationsFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "TX 1 Communications Fail. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 64 }
+
+vxVstcAlarmTx1OutputLow OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "TX 1 Output Low. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 65 }
+
+vxVstcAlarmTx2CommunicationsFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "TX 2 Communications Fail. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 66 }
+
+vxVstcAlarmTx2OutputLow OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "TX 2 Output Low. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 67 }
+
+vxVstcAlarmMainAesUnlocked OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Main AES Unlocked. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 68 }
+
+vxVstcAlarmMainAesLow OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Main AES Low. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 69 }
+
+vxVstcAlarmBackupAesUnlocked OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Backup AES Unlocked. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 70 }
+
+vxVstcAlarmBackupAesLow OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Backup AES Low. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 71 }
+
+vxVstcAlarmTx1Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "TX 1 Fail. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 72 }
+
+vxVstcAlarmTx2Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "TX 2 Fail. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 73 }
+
+vxVstcAlarmRfChangeover OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "RF Changeover. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 76 }
+
+vxVstcAlarmAesChangeover OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES Changeover. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 77 }
+
+vxVstcAlarmRelayPositionFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Relay Position Fail. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 78 }
+
+vxVstcAlarmRelayInterlockOpen OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Relay Interlock Open. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 79 }
+
+vxVstcAlarmSystemInterlockOpen OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "System Interlock Open. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 80 }
+
+vxVstcAlarmPlus24VAFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "+24 V A Fail. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 81 }
+
+vxVstcAlarmPlus24VBFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "+24 V B Fail. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 82 }
+
+vxVstcAlarmPlus1-8VFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "+1.8 V Fail. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 83 }
+
+vxVstcAlarmPlus3-3VFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "+3.3 V Fail. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 84 }
+
+vxVstcAlarmPlus15VFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "+15 V Fail. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 85 }
+
+vxVstcAlarmDummyLoadInterlockOpen OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Dummy Load Interlock Open. Alarm applicable for all VX models with VS-TC."
+  ::= { vxVstc 86 }
+
+vxEcsibAlarmSwrShutback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Exciter/Controller SWR Shutback. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxEcsib 1280 }
+
+vxEcsibAlarmIpaFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "IPA Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxEcsib 1299 }
+
+vxEcsibAlarmFan2Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Exciter/Controller Fan Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxEcsib 1301 }
+
+vxEcsibAlarmFan2LowSpeed OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Exciter/Controller Fan Low Speed. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxEcsib 1306 }
+
+vxEcsibAlarmNoExciterComms OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Exciter PWB Comm Fail. Alarm applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxEcsib 1310 }
+
+vxEcsibMeterFan2Speed OBJECT-TYPE
+    SYNTAX MeterInteger
+    UNITS "rpm"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "ECSIB Fan 2 Speed.  Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxEcsib 257 }
+
+vxEcsibMeterPlus3-3V OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "ECSIB +3.3 VDC. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxEcsib 261 }
+
+vxEcsibMeterPlus12V OBJECT-TYPE
+    SYNTAX Tenths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "ECSIB +12 VDC. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxEcsib 263 }
+
+vxEcsibMeterInletTemp OBJECT-TYPE
+    SYNTAX Tenths
+    UNITS "C"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Temperature at the primary air intake on the VX. This is the temperature displayed as the transmitter temperature on the VX FPUI. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxEcsib 270 }
+
+vxAabAlarmPlus12VFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Analog Audio PWB +12 V Fail. Alarm applicable for all VX models."
+  ::= { vxAab 1309 }
+
+vxAabAlarmDcVoltageFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Analog Audio PWB DC Voltage Fail. Alarm applicable for all VX models."
+  ::= { vxAab 1310 }
+
+vxAabAlarmAudioFailure OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Analog Audio PWB Audio Fail. Alarm applicable for all VX models."
+  ::= { vxAab 1380 }
+
+vxAabMeterPlus5V OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Analog Audio Board +5 VDC. Meter applicable for all VX models."
+  ::= { vxAab 400 }
+
+vxAabMeterMinus8V OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Analog Audio Board -8 VDC. Meter applicable for all VX models."
+  ::= { vxAab 401 }
+
+vxAabMeterPlus8V OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Analog Audio Board +8 VDC. Meter applicable for all VX models."
+  ::= { vxAab 402 }
+
+vxAabMeterPlus12V OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Analog Audio Board +12 VDC. Meter applicable for all VX models."
+  ::= { vxAab 403 }
+
+vxControllerAlarmFpuiFailure OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Display Fail. Alarm applicable for all VX models."
+  ::= { vxController 1304 }
+
+vxControllerAlarmLowBackupAudioPlayerLeft OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Audio Player Left Backup Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1365 }
+
+vxControllerAlarmNeedToRunAutoBias OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Need to Run Autobias Routine. Alarm applicable for all VX models."
+  ::= { vxController 1321 }
+
+vxControllerAlarmLowBackupAudioDmpx1 OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "DMPX1 Backup Low. Alarm applicable for all VX models."
+  ::= { vxController 1369 }
+
+vxControllerAlarmScInterlock OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "System Controller Interlock. Alarm applicable for all VX models."
+  ::= { vxController 1315 }
+
+vxControllerAlarmDcVoltageFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Exciter DC Voltage Failure. Alarm applicable for all VX models."
+  ::= { vxController 1308 }
+
+vxControllerAlarmHighAmbientTempShutback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "High Ambient Temperature Shutback. Alarm applicable for all VX models."
+  ::= { vxController 1328 }
+
+vxControllerAlarmLowAudioPlayerLeft OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Audio Player Left Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1353 }
+
+vxControllerAlarmHostNetworkingDown OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Host Network Down. Alarm applicable for all VX models."
+  ::= { vxController 1394 }
+
+vxControllerAlarmMissingExt10Mhz OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Missing External 10 MHz. Alarm applicable for all VX models."
+  ::= { vxController 1316 }
+
+vxControllerAlarmPa3BiasFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 3 Bias Fail. Alarm applicable for all VX models."
+  ::= { vxController 1339 }
+
+vxControllerAlarmAudioProcessorOutputFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Audio Processor Output Failure. Alarm applicable for all VX models."
+  ::= { vxController 1319 }
+
+vxControllerAlarmLicensingFailure OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Licensing Fail. Alarm applicable for all VX models."
+  ::= { vxController 1397 }
+
+vxControllerAlarmPa4BiasFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 4 Bias Fail. Alarm applicable for all VX models."
+  ::= { vxController 1340 }
+
+vxControllerAlarmAutoBiasRunning OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Autobias Running. Alarm applicable for all VX models."
+  ::= { vxController 1336 }
+
+vxControllerAlarmSwrShutdown OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SWR Shutdown. Alarm applicable for all VX models."
+  ::= { vxController 1331 }
+
+vxControllerAlarmPresetError OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Preset Error(s). Alarm applicable for all VX models."
+  ::= { vxController 1320 }
+
+vxControllerAlarmMissingPresets OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Missing Presets. Alarm applicable for all VX models."
+  ::= { vxController 1299 }
+
+vxControllerAlarmSummaryFault OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Summary Fault. Alarm applicable for all VX models."
+  ::= { vxController 1280 }
+
+vxControllerAlarmFanFailShutback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fan Fail Shutback. Alarm applicable for all VX models."
+  ::= { vxController 1396 }
+
+vxControllerAlarmInvalidDateTime OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Invalid Date & Time. Alarm applicable for all VX models."
+  ::= { vxController 1388 }
+
+vxControllerAlarmLowSca2AnalogRight OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SCA2 Analog Right Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1375 }
+
+vxControllerAlarmSummaryRfOutputFault OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Summary RF Output Fault. Alarm applicable for all VX models."
+  ::= { vxController 1282 }
+
+vxControllerAlarmLowBackupAudioAes1Right OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES1 Right Backup Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1362 }
+
+vxControllerAlarmLowBackupAudioAnalogRight OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Analog Right Backup Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1360 }
+
+vxControllerAlarmLowAudioDmpx2 OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "DMPX2 Low. Alarm applicable for all VX models."
+  ::= { vxController 1358 }
+
+vxControllerAlarmLowAudioDmpx1 OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "DMPX1 Low. Alarm applicable for all VX models."
+  ::= { vxController 1357 }
+
+vxControllerAlarmLowAudioMpx1 OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MPX1 Low. Alarm applicable for all VX models."
+  ::= { vxController 1355 }
+
+vxControllerAlarmExternalInterlock OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "External Interlock. Alarm applicable for all VX models."
+  ::= { vxController 1298 }
+
+vxControllerAlarmUnsignedFpgaImage OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Invalid FPGA Image Signature. Alarm applicable for all VX models."
+  ::= { vxController 1301 }
+
+vxControllerAlarmPlus12VFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Exciter +12 V Failure. Alarm applicable for all VX models."
+  ::= { vxController 1307 }
+
+vxControllerAlarmHighForwardPower OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "High Forward Power. Alarm applicable for all VX models."
+  ::= { vxController 1311 }
+
+vxControllerAlarmLowForwardPower OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Low Forward Power. Alarm applicable for all VX models."
+  ::= { vxController 1312 }
+
+vxControllerAlarmVeryLowForwardPower OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Very Low Forward Power. Alarm applicable for all VX models."
+  ::= { vxController 1313 }
+
+vxControllerAlarmLowAudioAes2Right OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES2 Right Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1352 }
+
+vxControllerAlarmLowAudioAes2Left OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES2 Left Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1351 }
+
+vxControllerAlarmLowAudioAes1Right OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES1 Right Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1350 }
+
+vxControllerAlarmLowAudioAes1Left OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES1 Left Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1349 }
+
+vxControllerAlarmHighSwrShutdown OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "High SWR Shutdown. Alarm applicable for all VX models."
+  ::= { vxController 1314 }
+
+vxControllerAlarmAudioProcessorOffline OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Audio Processor Offline. Alarm applicable for all VX models."
+  ::= { vxController 1318 }
+
+vxControllerAlarmPllUnlocked OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Clock PLL Unlocked. Alarm applicable for all VX models."
+  ::= { vxController 1323 }
+
+vxControllerAlarmPaHighPowerDissipationFoldback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA High Power Dissipation Foldback. Alarm applicable for all VX models."
+  ::= { vxController 1324 }
+
+vxControllerAlarmAudioAnalogRightLow OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Analog Right Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1348 }
+
+vxControllerAlarmLowACShutback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Low AC Shutback. Alarm applicable for all VX models."
+  ::= { vxController 1346 }
+
+vxControllerAlarmIpa2BiasFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "IPA Stage 2 Bias Fail. Alarm applicable for all VX models."
+  ::= { vxController 1344 }
+
+vxControllerAlarmIpa1BiasFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "IPA Stage 1 Bias Fail. Alarm applicable for all VX models."
+  ::= { vxController 1343 }
+
+vxControllerAlarmPa6BiasFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 6 Bias Fail. Alarm applicable for all VX models."
+  ::= { vxController 1342 }
+
+vxControllerAlarmHighHeatsinkTempShutdown OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "High Heatsink Temperature Shutdown. Alarm applicable for all VX models."
+  ::= { vxController 1326 }
+
+vxControllerAlarmHighHeatsinkTempWarning OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "High Heatsink Temperature Warning. Alarm applicable for all VX models."
+  ::= { vxController 1325 }
+
+vxControllerAlarmHighSwr OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "High SWR. Alarm applicable for all VX models."
+  ::= { vxController 1322 }
+
+vxControllerAlarmPa5BiasFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 5 Bias Fail. Alarm applicable for all VX models."
+  ::= { vxController 1341 }
+
+vxControllerAlarmPa2BiasFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 2 Bias Fail. Alarm applicable for all VX models."
+  ::= { vxController 1338 }
+
+vxControllerAlarmPa1BiasFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 1 Bias Fail. Alarm applicable for all VX models."
+  ::= { vxController 1337 }
+
+vxControllerAlarmAutoBiasFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Autobias Failed. Alarm applicable for all VX models."
+  ::= { vxController 1335 }
+
+vxControllerAlarmNoNameplateLicense OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "No Nameplate License. Alarm applicable for all VX models."
+  ::= { vxController 1334 }
+
+vxControllerAlarmInvalidLicenses OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Invalid License(s). Alarm applicable for all VX models."
+  ::= { vxController 1333 }
+
+vxControllerAlarmMissingPtp1PPS OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Missing PTP 1 PPS. Alarm applicable for all VX models."
+  ::= { vxController 1332 }
+
+vxControllerAlarmSwrCutback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SWR Cutback. Alarm applicable for all VX models."
+  ::= { vxController 1330 }
+
+vxControllerAlarmLowAmbientTempWarning OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Low Ambient Temperature Warning. Alarm applicable for all VX models."
+  ::= { vxController 1329 }
+
+vxControllerAlarmMissingExt1PPS OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Missing External 1 PPS. Alarm applicable for all VX models."
+  ::= { vxController 1317 }
+
+vxControllerAlarmFirmwareUpdateFailure OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Firmware Update Fail. Alarm applicable for all VX models."
+  ::= { vxController 1306 }
+
+vxControllerAlarmSwrFoldback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SWR Foldback. Alarm applicable for all VX models."
+  ::= { vxController 1303 }
+
+vxControllerAlarmFpgaFailure OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "FPGA Fail. Alarm applicable for all VX models."
+  ::= { vxController 1300 }
+
+vxControllerAlarmSib2CommFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Power Supply Interface PWB Comm Fail. Alarm applicable for all VX models."
+  ::= { vxController 1297 }
+
+vxControllerAlarmHostNotBooted OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Host Not Booted. Alarm applicable for all VX models."
+  ::= { vxController 1383 }
+
+vxControllerAlarmRfDriveLow OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Low RF Drive. Alarm applicable for all VX models."
+  ::= { vxController 1386 }
+
+vxControllerAlarmLowBackupAudioMpx2 OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MPX2 Backup Low. Alarm applicable for all VX models."
+  ::= { vxController 1368 }
+
+vxControllerAlarmLowBackupAudioPlayerRight OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Audio Player Right Backup Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1366 }
+
+vxControllerAlarmLowBackupAudioMpx1 OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MPX1 Backup Low. Alarm applicable for all VX models."
+  ::= { vxController 1367 }
+
+vxControllerAlarmLowAcInput OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Low AC Input. Alarm applicable for all VX models."
+  ::= { vxController 1391 }
+
+vxControllerAlarmIpaPsFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "IPA PS Fail. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 1389 }
+
+vxControllerAlarmExciterBooted OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Exciter Booted. Alarm applicable for all VX models."
+  ::= { vxController 1385 }
+
+vxControllerAlarmHostNotResponding OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Host Not Responding. Alarm applicable for all VX models."
+  ::= { vxController 1384 }
+
+vxControllerAlarmUnlockAes2 OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES2 Unlocked. Alarm applicable for all VX models."
+  ::= { vxController 1382 }
+
+vxControllerAlarmUnlockAes1 OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES1 Unlocked. Alarm applicable for all VX models."
+  ::= { vxController 1381 }
+
+vxControllerAlarmUsingAudioBackup OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Using Audio Backup. Alarm applicable for all VX models."
+  ::= { vxController 1379 }
+
+vxControllerAlarmModulationLossShutback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Modulation Loss Shutback. Alarm applicable for all VX models."
+  ::= { vxController 1378 }
+
+vxControllerAlarmModulationLoss OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Modulation Loss. Alarm applicable for all VX models."
+  ::= { vxController 1377 }
+
+vxControllerAlarmLowSca2Aes2Left OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SCA2 AES2 Left Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1376 }
+
+vxControllerAlarmLowSca1Aes1Left OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SCA1 AES1 Left Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1374 }
+
+vxControllerAlarmLowSca1AnalogLeft OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SCA1 Analog Left Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1373 }
+
+vxControllerAlarmLowScaMpx1 OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SCA1 Low (MPX1). Alarm applicable for all VX models."
+  ::= { vxController 1371 }
+
+vxControllerAlarmLowBackupAudioDmpx2 OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "DMPX2 Backup Low. Alarm applicable for all VX models."
+  ::= { vxController 1370 }
+
+vxControllerAlarmLowBackupAudioAes2Right OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES2 Right Backup Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1364 }
+
+vxControllerAlarmLowBackupAudioAes2Left OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES2 Left Backup Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1363 }
+
+vxControllerAlarmLowBackupAudioAes1Left OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES1 Left Backup Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1361 }
+
+vxControllerAlarmHighRejectPowerShutdown OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "High Reject Power Shutdown. Alarm applicable for all VX models."
+  ::= { vxController 1393 }
+
+vxControllerAlarmLowACFoldback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Low AC Foldback. Alarm applicable for all VX models."
+  ::= { vxController 1345 }
+
+vxControllerAlarmSummaryExciterFault OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Exciter Fault. Alarm applicable for all VX models."
+  ::= { vxController 1281 }
+
+vxControllerAlarmSibCommFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Exciter/Controller System Interface PWB Comm Fail. Alarm applicable for all VX models."
+  ::= { vxController 1296 }
+
+vxControllerAlarmConfigurationError OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Boot Configuration Failed. Alarm applicable for all VX models."
+  ::= { vxController 1302 }
+
+vxControllerAlarmFirmwareUpdate OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Entered Firmware Update. Alarm applicable for all VX models."
+  ::= { vxController 1305 }
+
+vxControllerAlarmHighAmbientTempWarning OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "High Ambient Temperature Warning. Alarm applicable for all VX models."
+  ::= { vxController 1327 }
+
+vxControllerAlarmAudioAnalogLeftLow OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Analog Left Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1347 }
+
+vxControllerAlarmLowAudioPlayerRight OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Audio Player Right Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1354 }
+
+vxControllerAlarmLowScaMpx2 OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SCA2 Low (MPX2). Alarm applicable for all VX models."
+  ::= { vxController 1372 }
+
+vxControllerAlarmRfDriveHigh OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "High RF Drive. Alarm applicable for all VX models."
+  ::= { vxController 1387 }
+
+vxControllerAlarmPilotUnsynced OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Pilot Unsync. Alarm applicable for all VX models."
+  ::= { vxController 1398 }
+
+vxControllerAlarmLowAudioMpx2 OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MPX2 Low. Alarm applicable for all VX models."
+  ::= { vxController 1356 }
+
+vxControllerAlarmHighRejectPowerFoldback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "High Reject Power Foldback. Alarm applicable for all VX models."
+  ::= { vxController 1392 }
+
+vxControllerAlarmLowBackupAudioAnalogLeft OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Analog Left Backup Audio Low. Alarm applicable for all VX models."
+  ::= { vxController 1359 }
+
+vxControllerAlarmRfSampleFault OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "RF Sample Fault. Alarm applicable for all VX models."
+  ::= { vxController 1399 }
+
+vxControllerAlarmExciterControllerSwrShutdown OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Exciter/Controller SWR Shutdown. Alarm applicable for all VX models."
+  ::= { vxController 1400 }
+
+vxControllerAlarmPaFailFoldback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA Fail Foldback. Alarm applicable for all VX models."
+  ::= { vxController 1401 }
+
+vxControllerAlarmPsFailFoldback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS Fail Foldback. Alarm applicable for all VX models."
+  ::= { vxController 1402 }
+
+vxControllerAlarmPaPsFailShutdown OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA/PS Fail Shutdown. Alarm applicable for all VX models."
+  ::= { vxController 1403 }
+
+vxControllerAlarmTemperatureSensorFailure OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Temperature Sensor Fail. Alarm applicable for all VX models."
+  ::= { vxController 1404 }
+
+vxControllerAlarmTransferCtrlCommFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Transfer Control Communications Fail. Alarm applicable for all VX models with VS-TC."
+  ::= { vxController 1405 }
+
+vxControllerMeterForwardPower OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "W"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Forward Power. Meter applicable for all VX models."
+  ::= { vxController 265 }
+
+vxControllerMeterPa2Dissipation OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "W"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 2 Dissipation. Meter applicable for the following VX models: VX1.5, VX2, VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 321 }
+
+vxControllerMeterPa2Voltage OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 2 Voltage. Meter applicable for the following VX models: VX1.5, VX2, VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4356 }
+
+vxControllerMeterPa2Current OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "A"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 2 Current. Meter applicable for the following VX models: VX1.5, VX2, VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4357 }
+
+vxControllerMeterPa2BiasVoltage OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 2 Bias. Meter applicable for the following VX models: VX1.5, VX2, VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4373 }
+
+vxControllerMeterPlus2-5V OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Monitor the voltage of the nominal 2.5 V rail on the nape90. Meter applicable for all VX models."
+  ::= { vxController 274 }
+
+vxControllerMeterTenMhzDeltaPpb OBJECT-TYPE
+    SYNTAX MeterInteger
+    UNITS "ppm"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "10 MHz Delta. Meter applicable for all VX models."
+  ::= { vxController 305 }
+
+vxControllerMeterPlus1-5V OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Monitor the voltage on the nominal 1.5 V rail on the nape90. Meter applicable for all VX models."
+  ::= { vxController 275 }
+
+vxControllerMeterDcEfficiency OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "DC-RF Efficiency. Meter applicable for all VX models."
+  ::= { vxController 262 }
+
+vxControllerMeterDacGainScaler OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "DAC Gain Scaler. Meter applicable for all VX models."
+  ::= { vxController 281 }
+
+vxControllerMeterPpsDelta OBJECT-TYPE
+    SYNTAX MeterInteger
+    UNITS "ppm"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "1 PPS Accuracy. Meter applicable for all VX models."
+  ::= { vxController 306 }
+
+vxControllerMeterPlus12V OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Monitor the voltage on the nominal 12 V rail on the VX. Meter applicable for all VX models."
+  ::= { vxController 276 }
+
+vxControllerMeterVswr OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "VSWR. Meter applicable for all VX models."
+  ::= { vxController 260 }
+
+vxControllerMeterAveragePaVolts OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Average Power Amplifier Volts. Meter applicable for all VX models."
+  ::= { vxController 263 }
+
+vxControllerMeterModulationPeak OBJECT-TYPE
+    SYNTAX Hundredths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Modulation Peak. Meter applicable for all VX models."
+  ::= { vxController 289 }
+
+vxControllerMeterPa1Dissipation OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "W"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 1 Dissipation. Meter applicable for all VX models."
+  ::= { vxController 320 }
+
+vxControllerMeterPlus5V OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Monitor the voltage on the nominal 5 V rail on the nape90. Meter applicable for all VX models."
+  ::= { vxController 277 }
+
+vxControllerMeterPlus3-3V OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Monitors the voltage on the nominal 3.3 V rail on the nape90 board. Meter applicable for all VX models."
+  ::= { vxController 272 }
+
+vxControllerMeterReflectedRmsPower OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "W"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "RMS power reflected from the antenna. Meter applicable for all VX models."
+  ::= { vxController 257 }
+
+vxControllerMeterTotalPaCurrent OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "A"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total PA Current. Meter applicable for all VX models."
+  ::= { vxController 264 }
+
+vxControllerMeterMpxRms OBJECT-TYPE
+    SYNTAX Hundredths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MPX RMS. Meter applicable for all VX models."
+  ::= { vxController 290 }
+
+vxControllerMeterPlus1-1V OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Monitor the voltage of the nominal 1.1 V rail on the nape90. Meter applicable for all VX models."
+  ::= { vxController 273 }
+
+vxControllerMeterAnalogRight OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Analog Right. Meter applicable for all VX models."
+  ::= { vxController 292 }
+
+vxControllerMeterAnalogLeft OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Analog Left. Meter applicable for all VX models."
+  ::= { vxController 291 }
+
+vxControllerMeterRfDrivePower OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "W"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "IPA Forward Power. Meter applicable for all VX models."
+  ::= { vxController 4352 }
+
+vxControllerMeterIpa1BiasVoltage OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "IPA 1 Bias. Meter applicable for all VX models."
+  ::= { vxController 4378 }
+
+vxControllerMeterMpx2 OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MPX2 Peak. Meter applicable for all VX models."
+  ::= { vxController 298 }
+
+vxControllerMeterMpx1 OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MPX1 Peak. Meter applicable for all VX models."
+  ::= { vxController 297 }
+
+vxControllerMeterAes2Left OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES 2 Left. Meter applicable for all VX models."
+  ::= { vxController 295 }
+
+vxControllerMeterAes2Right OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES 2 Right. Meter applicable for all VX models."
+  ::= { vxController 296 }
+
+vxControllerMeterAes1Left OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES 1 Left. Meter applicable for all VX models."
+  ::= { vxController 293 }
+
+vxControllerMeterAes1Right OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "AES 1 Right. Meter applicable for all VX models."
+  ::= { vxController 294 }
+
+vxControllerMeterAes1DMPX OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Digital 1 DMPX. Meter applicable for all VX models."
+  ::= { vxController 299 }
+
+vxControllerMeterAes2DMPX OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Digital 2 DMPX. Meter applicable for all VX models."
+  ::= { vxController 300 }
+
+vxControllerMeterAudioPlayerLeft OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Audio Player Left. Meter applicable for all VX models."
+  ::= { vxController 301 }
+
+vxControllerMeterAudioPlayerRight OBJECT-TYPE
+    SYNTAX Thousandths
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Audio Player Right. Meter applicable for all VX models."
+  ::= { vxController 302 }
+
+vxControllerMeterIpaVoltage OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "IPA Volts. Meter applicable for all VX models."
+  ::= { vxController 4389 }
+
+vxControllerMeterHeatsinkTemp OBJECT-TYPE
+    SYNTAX Tenths
+    UNITS "C"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Amplifier Heatsink Temp. Meter applicable for all VX models."
+  ::= { vxController 4704 }
+
+vxControllerMeterIpaCurrent OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "A"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "IPA Current. Meter applicable for all VX models."
+  ::= { vxController 4371 }
+
+vxControllerMeterPa1BiasVoltage OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 1 Bias. Meter applicable for all VX models."
+  ::= { vxController 4372 }
+
+vxControllerMeterPa1Voltage OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 1 Voltage. Meter applicable for all VX models."
+  ::= { vxController 4353 }
+
+vxControllerMeterPa1Current OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "A"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 1 Current. Meter applicable for all VX models."
+  ::= { vxController 4354 }
+
+vxControllerMeterPa3Dissipation OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "W"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 3 Dissipation. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 322 }
+
+vxControllerMeterPa4Dissipation OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "W"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 4 Dissipation. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 323 }
+
+vxControllerMeterPa5Dissipation OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "W"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 5 Dissipation. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 324 }
+
+vxControllerMeterPa6Dissipation OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "W"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 6 Dissipation. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 325 }
+
+vxControllerMeterPa3Voltage OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 3 Voltage. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4359 }
+
+vxControllerMeterPa3Current OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "A"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 3 Current. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4360 }
+
+vxControllerMeterPa4Voltage OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 4 Voltage. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4362 }
+
+vxControllerMeterPa4Current OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "A"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 4 Current. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4363 }
+
+vxControllerMeterPa5Voltage OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 5 Voltage. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4365 }
+
+vxControllerMeterPa5Current OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "A"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 5 Current. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4366 }
+
+vxControllerMeterPa6Voltage OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 6 Voltage. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4368 }
+
+vxControllerMeterPa6Current OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "A"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 6 Current. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4369 }
+
+vxControllerMeterIpa2BiasVoltage OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "IPA 2 Bias. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4379 }
+
+vxControllerMeterPa3BiasVoltage OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 3 Bias. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4374 }
+
+vxControllerMeterPa4BiasVoltage OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 4 Bias. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4375 }
+
+vxControllerMeterPa5BiasVoltage OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 5 Bias. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4376 }
+
+vxControllerMeterPa6BiasVoltage OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 6 Bias. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4377 }
+
+vxControllerMeterPsAInputVoltage OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS A: Input Voltage. Meter applicable for all VX models."
+  ::= { vxController 4381 }
+
+vxControllerMeterPsBInputVoltage OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS B: Input Voltage. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4384 }
+
+vxControllerMeterPsCInputVoltage OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS C: Input Voltage. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 4387 }
+
+vxControllerMeterIpaReflectedPower OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "W"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "IPA Reflected Power. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 258 }
+
+vxControllerMeterRejectPower OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "W"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Final Stage Reject Power. Meter applicable for the following VX models: VX3, VX3.5, VX4, VX5, VX6."
+  ::= { vxController 259 }
+
+vxControllerPowerSetpoint OBJECT-TYPE
+    SYNTAX Thousandths
+    UNITS "W"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Power setpoint. Property applicable for all VX models."
+  ::= { vxController 512 }
+
+vxControllerCarrierFrequency OBJECT-TYPE
+    SYNTAX Millionths
+    UNITS "MHz"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Operating frequency. Property applicable for all VX models."
+  ::= { vxController 513 }
+
+vxControllerExternal10Mhz OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Enabled/Disabled (0 = OFF, 1 = ON). Property applicable for all VX models."
+  ::= { vxController 519 }
+
+vxControllerActivePresetIdChannel OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Active preset channel address. Property applicable for all VX models."
+  ::= { vxController 4159 }
+
+vxControllerRfOnOff OBJECT-TYPE
+    SYNTAX RfState
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Write to this channel to turn RF on or off:
+0 - RF OFF
+1 - RF ON
+2 - RF INHIBITED
+Property applicable for all VX models."
+  ::= { vxController 514 }
+
+vxControllerLocalRemote OBJECT-TYPE
+    SYNTAX LocalRemote
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Choose between local or remote control:
+0 = LOCAL
+1 = REMOTE
+Property applicable for all VX models."
+  ::= { vxController 8 }
+
+vxControllerSchedulerOnOff OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Scheduler Enabled/Disabled (0 = OFF, 1 = ON). Property applicable for all VX models."
+  ::= { vxController 4164 }
+
+vxControllerReset OBJECT-TYPE
+    SYNTAX INTEGER(0..1)
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Reset latched alarms.  Writing any integer value will force the reset and by default we use 1. Property applicable for all VX models."
+  ::= { vxController 7 }
+
+vxControllerTransmitterTypeChannelAddress OBJECT-TYPE
+    SYNTAX VxTransmitterType
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Identifies the specific transmitter transmitter model for a VX family transmitter.  Is an integer with the following mapping:
+0 = Unlicensed
+1 = VX150
+2 = VX300
+3 = VX600
+4 = VX1
+5 = VX1.5
+6 = VX2
+7 = VX3
+8 = VX3.5
+9 = VX4
+10 = VX5
+11 = VX6."
+  ::= { vxController 2432 }
+
+vxControllerVswrShutdownOverrideEnable OBJECT-TYPE
+    SYNTAX INTEGER(0..1)
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Disabled/Enabled (0 = Disabled, 1 = Enabled).
+Property applicable for all VX models."
+  ::= { vxController 2064 }
+
+vxControllerVswrShutdownOverrideTimeoutReset OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Writing '1' will reset the override timer to 24hr.
+Reading returns the number of seconds remaining in the timeout.
+Property applicable for all VX models."
+  ::= { vxController 2065 }
+
+vxSibAlarmFan1Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fan 1 Fail. Alarm applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 1300 }
+
+vxSibAlarmNoExciterComms OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Exciter Communication Failure. Alarm applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 1310 }
+
+vxSibAlarmFan2LowSpeed OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fan 2 Low Speed. Alarm applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 1306 }
+
+vxSibAlarmFan1LowSpeed OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fan 1 Low Speed. Alarm applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 1305 }
+
+vxSibAlarmFan2Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fan 2 Fail. Alarm applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 1301 }
+
+vxSibAlarmIpaFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "IPA Fail. Alarm applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 1299 }
+
+vxSibAlarmPa2Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA 2 Fail. Alarm applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 1294 }
+
+vxSibAlarmPa1Fail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PA Fail. Alarm applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 1293 }
+
+vxSibAlarmPsAFail OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS Fail. Alarm applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 1290 }
+
+vxSibAlarmPsANotCompatible OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS Not Compatible. Alarm applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 1287 }
+
+vxSibAlarmPsANotCommunicating OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS Not Communicating. Alarm applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 1284 }
+
+vxSibAlarmSwrShutback OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SWR Shutback. Alarm applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2"
+  ::= { vxSib 1280 }
+
+vxSibAlarmPsANotInstalled OBJECT-TYPE
+    SYNTAX OnOff
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "PS Not Installed. Alarm applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2"
+  ::= { vxSib 1281 }
+
+vxSibMeterFan1Speed OBJECT-TYPE
+    SYNTAX MeterInteger
+    UNITS "rpm"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SIB Fan 1 Speed. Meter applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 256 }
+
+vxSibMeterFan2Speed OBJECT-TYPE
+    SYNTAX MeterInteger
+    UNITS "rpm"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SIB Fan 2 Speed. Meter applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 257 }
+
+vxSibMeterPlus3-3V OBJECT-TYPE
+    SYNTAX Hundredths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SIB +3.3 VDC. Meter applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 261 }
+
+vxSibMeterPlus12V OBJECT-TYPE
+    SYNTAX Tenths
+    UNITS "V"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SIB +12 VDC. Meter applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2."
+  ::= { vxSib 263 }
+
+vxSibMeterInletTemp OBJECT-TYPE
+    SYNTAX Tenths
+    UNITS "C"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Temperature at the primary air intake on the VX.  This is the temperature displayed as the transmitter temperature on the VX FPUI. Meter applicable for the following VX models: VX150, VX300, VX600, VX1, VX1.5, VX2"
+  ::= { vxSib 270 }
+
+--
+-- Trap definitions 
+--
+
+vxPsibAlarmPsANotCompatibleTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPsANotCompatible }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPsANotCompatible changes state"
+  ::= { vxPsibTrap 1287 }
+
+vxPsibAlarmPsANotInstalledTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPsANotInstalled }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPsANotInstalled changes state"
+  ::= { vxPsibTrap 1281 }
+
+vxPsibAlarmPsBNotInstalledTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPsBNotInstalled }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPsBNotInstalled changes state"
+  ::= { vxPsibTrap 1282 }
+
+vxPsibAlarmSwrShutbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmSwrShutback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmSwrShutback changes state"
+  ::= { vxPsibTrap 1280 }
+
+vxPsibAlarmPsCNotInstalledTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPsCNotInstalled }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPsCNotInstalled changes state"
+  ::= { vxPsibTrap 1283 }
+
+vxPsibAlarmPsANotCommunicatingTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPsANotCommunicating }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPsANotCommunicating changes state"
+  ::= { vxPsibTrap 1284 }
+
+vxPsibAlarmPsBNotCommunicatingTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPsBNotCommunicating }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPsBNotCommunicating changes state"
+  ::= { vxPsibTrap 1285 }
+
+vxPsibAlarmPsCNotCommunicatingTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPsCNotCommunicating }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPsCNotCommunicating changes state"
+  ::= { vxPsibTrap 1286 }
+
+vxPsibAlarmPsBNotCompatibleTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPsBNotCompatible }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPsBNotCompatible changes state"
+  ::= { vxPsibTrap 1288 }
+
+vxPsibAlarmPsCNotCompatibleTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPsCNotCompatible }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPsCNotCompatible changes state"
+  ::= { vxPsibTrap 1289 }
+
+vxPsibAlarmPsAFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPsAFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPsAFail changes state"
+  ::= { vxPsibTrap 1290 }
+
+vxPsibAlarmPsBFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPsBFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPsBFail changes state"
+  ::= { vxPsibTrap 1291 }
+
+vxPsibAlarmPsCFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPsCFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPsCFail changes state"
+  ::= { vxPsibTrap 1292 }
+
+vxPsibAlarmPa1FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPa1Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPa1Fail changes state"
+  ::= { vxPsibTrap 1293 }
+
+vxPsibAlarmPa2FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPa2Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPa2Fail changes state"
+  ::= { vxPsibTrap 1294 }
+
+vxPsibAlarmPa3FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPa3Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPa3Fail changes state"
+  ::= { vxPsibTrap 1295 }
+
+vxPsibAlarmPa4FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPa4Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPa4Fail changes state"
+  ::= { vxPsibTrap 1296 }
+
+vxPsibAlarmPa5FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPa5Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPa5Fail changes state"
+  ::= { vxPsibTrap 1297 }
+
+vxPsibAlarmPa6FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmPa6Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmPa6Fail changes state"
+  ::= { vxPsibTrap 1298 }
+
+vxPsibAlarmFan1FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmFan1Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmFan1Fail changes state"
+  ::= { vxPsibTrap 1300 }
+
+vxPsibAlarmFan2FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmFan2Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmFan2Fail changes state"
+  ::= { vxPsibTrap 1301 }
+
+vxPsibAlarmFan3FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmFan3Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmFan3Fail changes state"
+  ::= { vxPsibTrap 1302 }
+
+vxPsibAlarmFan4FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmFan4Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmFan4Fail changes state"
+  ::= { vxPsibTrap 1303 }
+
+vxPsibAlarmFan5FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmFan5Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmFan5Fail changes state"
+  ::= { vxPsibTrap 1304 }
+
+vxPsibAlarmFan1LowSpeedTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmFan1LowSpeed }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmFan1LowSpeed changes state"
+  ::= { vxPsibTrap 1305 }
+
+vxPsibAlarmFan2LowSpeedTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmFan2LowSpeed }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmFan2LowSpeed changes state"
+  ::= { vxPsibTrap 1306 }
+
+vxPsibAlarmFan3LowSpeedTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmFan3LowSpeed }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmFan3LowSpeed changes state"
+  ::= { vxPsibTrap 1307 }
+
+vxPsibAlarmFan4LowSpeedTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmFan4LowSpeed }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmFan4LowSpeed changes state"
+  ::= { vxPsibTrap 1308 }
+
+vxPsibAlarmFan5LowSpeedTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmFan5LowSpeed }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmFan5LowSpeed changes state"
+  ::= { vxPsibTrap 1309 }
+
+vxPsibAlarmNoExciterCommsTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmNoExciterComms }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmNoExciterComms changes state"
+  ::= { vxPsibTrap 1310 }
+
+vxPsibAlarmRejectPowerShutbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxPsibAlarmRejectPowerShutback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxPsibAlarmRejectPowerShutback changes state"
+  ::= { vxPsibTrap 1311 }
+
+vxVstcAlarmTx1CommunicationsFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmTx1CommunicationsFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmTx1CommunicationsFail changes state"
+  ::= { vxVstcTrap 64 }
+
+vxVstcAlarmTx1OutputLowTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmTx1OutputLow }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmTx1OutputLow changes state"
+  ::= { vxVstcTrap 65 }
+
+vxVstcAlarmTx2CommunicationsFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmTx2CommunicationsFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmTx2CommunicationsFail changes state"
+  ::= { vxVstcTrap 66 }
+
+vxVstcAlarmTx2OutputLowTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmTx2OutputLow }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmTx2OutputLow changes state"
+  ::= { vxVstcTrap 67 }
+
+vxVstcAlarmMainAesUnlockedTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmMainAesUnlocked }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmMainAesUnlocked changes state"
+  ::= { vxVstcTrap 68 }
+
+vxVstcAlarmMainAesLowTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmMainAesLow }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmMainAesLow changes state"
+  ::= { vxVstcTrap 69 }
+
+vxVstcAlarmBackupAesUnlockedTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmBackupAesUnlocked }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmBackupAesUnlocked changes state"
+  ::= { vxVstcTrap 70 }
+
+vxVstcAlarmBackupAesLowTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmBackupAesLow }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmBackupAesLow changes state"
+  ::= { vxVstcTrap 71 }
+
+vxVstcAlarmTx1FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmTx1Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmTx1Fail changes state"
+  ::= { vxVstcTrap 72 }
+
+vxVstcAlarmTx2FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmTx2Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmTx2Fail changes state"
+  ::= { vxVstcTrap 73 }
+
+vxVstcAlarmRfChangeoverTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmRfChangeover }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmRfChangeover changes state"
+  ::= { vxVstcTrap 76 }
+
+vxVstcAlarmAesChangeoverTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmAesChangeover }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmAesChangeover changes state"
+  ::= { vxVstcTrap 77 }
+
+vxVstcAlarmRelayPositionFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmRelayPositionFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmRelayPositionFail changes state"
+  ::= { vxVstcTrap 78 }
+
+vxVstcAlarmRelayInterlockOpenTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmRelayInterlockOpen }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmRelayInterlockOpen changes state"
+  ::= { vxVstcTrap 79 }
+
+vxVstcAlarmSystemInterlockOpenTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmSystemInterlockOpen }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmSystemInterlockOpen changes state"
+  ::= { vxVstcTrap 80 }
+
+vxVstcAlarmPlus24VAFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmPlus24VAFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmPlus24VAFail changes state"
+  ::= { vxVstcTrap 81 }
+
+vxVstcAlarmPlus24VBFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmPlus24VBFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmPlus24VBFail changes state"
+  ::= { vxVstcTrap 82 }
+
+vxVstcAlarmPlus1-8VFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmPlus1-8VFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmPlus1-8VFail changes state"
+  ::= { vxVstcTrap 83 }
+
+vxVstcAlarmPlus3-3VFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmPlus3-3VFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmPlus3-3VFail changes state"
+  ::= { vxVstcTrap 84 }
+
+vxVstcAlarmPlus15VFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmPlus15VFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmPlus15VFail changes state"
+  ::= { vxVstcTrap 85 }
+
+vxVstcAlarmDummyLoadInterlockOpenTrap NOTIFICATION-TYPE
+    OBJECTS { vxVstcAlarmDummyLoadInterlockOpen }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxVstcAlarmDummyLoadInterlockOpen changes state"
+  ::= { vxVstcTrap 86 }
+
+vxEcsibAlarmSwrShutbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxEcsibAlarmSwrShutback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxEcsibAlarmSwrShutback changes state"
+  ::= { vxEcsibTrap 1280 }
+
+vxEcsibAlarmIpaFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxEcsibAlarmIpaFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxEcsibAlarmIpaFail changes state"
+  ::= { vxEcsibTrap 1299 }
+
+vxEcsibAlarmFan2FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxEcsibAlarmFan2Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxEcsibAlarmFan2Fail changes state"
+  ::= { vxEcsibTrap 1301 }
+
+vxEcsibAlarmFan2LowSpeedTrap NOTIFICATION-TYPE
+    OBJECTS { vxEcsibAlarmFan2LowSpeed }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxEcsibAlarmFan2LowSpeed changes state"
+  ::= { vxEcsibTrap 1306 }
+
+vxEcsibAlarmNoExciterCommsTrap NOTIFICATION-TYPE
+    OBJECTS { vxEcsibAlarmNoExciterComms }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxEcsibAlarmNoExciterComms changes state"
+  ::= { vxEcsibTrap 1310 }
+
+vxAabAlarmPlus12VFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxAabAlarmPlus12VFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxAabAlarmPlus12VFail changes state"
+  ::= { vxAabTrap 1309 }
+
+vxAabAlarmDcVoltageFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxAabAlarmDcVoltageFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxAabAlarmDcVoltageFail changes state"
+  ::= { vxAabTrap 1310 }
+
+vxAabAlarmAudioFailureTrap NOTIFICATION-TYPE
+    OBJECTS { vxAabAlarmAudioFailure }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxAabAlarmAudioFailure changes state"
+  ::= { vxAabTrap 1380 }
+
+vxControllerAlarmFpuiFailureTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmFpuiFailure }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmFpuiFailure changes state"
+  ::= { vxControllerTrap 1304 }
+
+vxControllerAlarmLowBackupAudioPlayerLeftTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowBackupAudioPlayerLeft }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowBackupAudioPlayerLeft changes state"
+  ::= { vxControllerTrap 1365 }
+
+vxControllerAlarmNeedToRunAutoBiasTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmNeedToRunAutoBias }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmNeedToRunAutoBias changes state"
+  ::= { vxControllerTrap 1321 }
+
+vxControllerAlarmLowBackupAudioDmpx1Trap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowBackupAudioDmpx1 }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowBackupAudioDmpx1 changes state"
+  ::= { vxControllerTrap 1369 }
+
+vxControllerAlarmScInterlockTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmScInterlock }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmScInterlock changes state"
+  ::= { vxControllerTrap 1315 }
+
+vxControllerAlarmDcVoltageFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmDcVoltageFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmDcVoltageFail changes state"
+  ::= { vxControllerTrap 1308 }
+
+vxControllerAlarmHighAmbientTempShutbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmHighAmbientTempShutback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmHighAmbientTempShutback changes state"
+  ::= { vxControllerTrap 1328 }
+
+vxControllerAlarmLowAudioPlayerLeftTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowAudioPlayerLeft }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowAudioPlayerLeft changes state"
+  ::= { vxControllerTrap 1353 }
+
+vxControllerAlarmHostNetworkingDownTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmHostNetworkingDown }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmHostNetworkingDown changes state"
+  ::= { vxControllerTrap 1394 }
+
+vxControllerAlarmMissingExt10MhzTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmMissingExt10Mhz }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmMissingExt10Mhz changes state"
+  ::= { vxControllerTrap 1316 }
+
+vxControllerAlarmPa3BiasFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPa3BiasFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPa3BiasFail changes state"
+  ::= { vxControllerTrap 1339 }
+
+vxControllerAlarmAudioProcessorOutputFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmAudioProcessorOutputFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmAudioProcessorOutputFail changes state"
+  ::= { vxControllerTrap 1319 }
+
+vxControllerAlarmLicensingFailureTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLicensingFailure }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLicensingFailure changes state"
+  ::= { vxControllerTrap 1397 }
+
+vxControllerAlarmPa4BiasFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPa4BiasFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPa4BiasFail changes state"
+  ::= { vxControllerTrap 1340 }
+
+vxControllerAlarmAutoBiasRunningTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmAutoBiasRunning }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmAutoBiasRunning changes state"
+  ::= { vxControllerTrap 1336 }
+
+vxControllerAlarmSwrShutdownTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmSwrShutdown }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmSwrShutdown changes state"
+  ::= { vxControllerTrap 1331 }
+
+vxControllerAlarmPresetErrorTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPresetError }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPresetError changes state"
+  ::= { vxControllerTrap 1320 }
+
+vxControllerAlarmMissingPresetsTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmMissingPresets }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmMissingPresets changes state"
+  ::= { vxControllerTrap 1299 }
+
+vxControllerAlarmSummaryFaultTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmSummaryFault }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmSummaryFault changes state"
+  ::= { vxControllerTrap 1280 }
+
+vxControllerAlarmFanFailShutbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmFanFailShutback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmFanFailShutback changes state"
+  ::= { vxControllerTrap 1396 }
+
+vxControllerAlarmInvalidDateTimeTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmInvalidDateTime }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmInvalidDateTime changes state"
+  ::= { vxControllerTrap 1388 }
+
+vxControllerAlarmLowSca2AnalogRightTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowSca2AnalogRight }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowSca2AnalogRight changes state"
+  ::= { vxControllerTrap 1375 }
+
+vxControllerAlarmSummaryRfOutputFaultTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmSummaryRfOutputFault }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmSummaryRfOutputFault changes state"
+  ::= { vxControllerTrap 1282 }
+
+vxControllerAlarmLowBackupAudioAes1RightTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowBackupAudioAes1Right }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowBackupAudioAes1Right changes state"
+  ::= { vxControllerTrap 1362 }
+
+vxControllerAlarmLowBackupAudioAnalogRightTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowBackupAudioAnalogRight }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowBackupAudioAnalogRight changes state"
+  ::= { vxControllerTrap 1360 }
+
+vxControllerAlarmLowAudioDmpx2Trap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowAudioDmpx2 }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowAudioDmpx2 changes state"
+  ::= { vxControllerTrap 1358 }
+
+vxControllerAlarmLowAudioDmpx1Trap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowAudioDmpx1 }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowAudioDmpx1 changes state"
+  ::= { vxControllerTrap 1357 }
+
+vxControllerAlarmLowAudioMpx1Trap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowAudioMpx1 }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowAudioMpx1 changes state"
+  ::= { vxControllerTrap 1355 }
+
+vxControllerAlarmExternalInterlockTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmExternalInterlock }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmExternalInterlock changes state"
+  ::= { vxControllerTrap 1298 }
+
+vxControllerAlarmUnsignedFpgaImageTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmUnsignedFpgaImage }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmUnsignedFpgaImage changes state"
+  ::= { vxControllerTrap 1301 }
+
+vxControllerAlarmPlus12VFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPlus12VFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPlus12VFail changes state"
+  ::= { vxControllerTrap 1307 }
+
+vxControllerAlarmHighForwardPowerTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmHighForwardPower }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmHighForwardPower changes state"
+  ::= { vxControllerTrap 1311 }
+
+vxControllerAlarmLowForwardPowerTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowForwardPower }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowForwardPower changes state"
+  ::= { vxControllerTrap 1312 }
+
+vxControllerAlarmVeryLowForwardPowerTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmVeryLowForwardPower }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmVeryLowForwardPower changes state"
+  ::= { vxControllerTrap 1313 }
+
+vxControllerAlarmLowAudioAes2RightTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowAudioAes2Right }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowAudioAes2Right changes state"
+  ::= { vxControllerTrap 1352 }
+
+vxControllerAlarmLowAudioAes2LeftTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowAudioAes2Left }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowAudioAes2Left changes state"
+  ::= { vxControllerTrap 1351 }
+
+vxControllerAlarmLowAudioAes1RightTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowAudioAes1Right }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowAudioAes1Right changes state"
+  ::= { vxControllerTrap 1350 }
+
+vxControllerAlarmLowAudioAes1LeftTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowAudioAes1Left }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowAudioAes1Left changes state"
+  ::= { vxControllerTrap 1349 }
+
+vxControllerAlarmHighSwrShutdownTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmHighSwrShutdown }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmHighSwrShutdown changes state"
+  ::= { vxControllerTrap 1314 }
+
+vxControllerAlarmAudioProcessorOfflineTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmAudioProcessorOffline }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmAudioProcessorOffline changes state"
+  ::= { vxControllerTrap 1318 }
+
+vxControllerAlarmPllUnlockedTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPllUnlocked }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPllUnlocked changes state"
+  ::= { vxControllerTrap 1323 }
+
+vxControllerAlarmPaHighPowerDissipationFoldbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPaHighPowerDissipationFoldback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPaHighPowerDissipationFoldback changes state"
+  ::= { vxControllerTrap 1324 }
+
+vxControllerAlarmAudioAnalogRightLowTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmAudioAnalogRightLow }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmAudioAnalogRightLow changes state"
+  ::= { vxControllerTrap 1348 }
+
+vxControllerAlarmLowACShutbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowACShutback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowACShutback changes state"
+  ::= { vxControllerTrap 1346 }
+
+vxControllerAlarmIpa2BiasFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmIpa2BiasFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmIpa2BiasFail changes state"
+  ::= { vxControllerTrap 1344 }
+
+vxControllerAlarmIpa1BiasFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmIpa1BiasFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmIpa1BiasFail changes state"
+  ::= { vxControllerTrap 1343 }
+
+vxControllerAlarmPa6BiasFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPa6BiasFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPa6BiasFail changes state"
+  ::= { vxControllerTrap 1342 }
+
+vxControllerAlarmHighHeatsinkTempShutdownTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmHighHeatsinkTempShutdown }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmHighHeatsinkTempShutdown changes state"
+  ::= { vxControllerTrap 1326 }
+
+vxControllerAlarmHighHeatsinkTempWarningTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmHighHeatsinkTempWarning }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmHighHeatsinkTempWarning changes state"
+  ::= { vxControllerTrap 1325 }
+
+vxControllerAlarmHighSwrTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmHighSwr }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmHighSwr changes state"
+  ::= { vxControllerTrap 1322 }
+
+vxControllerAlarmPa5BiasFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPa5BiasFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPa5BiasFail changes state"
+  ::= { vxControllerTrap 1341 }
+
+vxControllerAlarmPa2BiasFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPa2BiasFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPa2BiasFail changes state"
+  ::= { vxControllerTrap 1338 }
+
+vxControllerAlarmPa1BiasFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPa1BiasFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPa1BiasFail changes state"
+  ::= { vxControllerTrap 1337 }
+
+vxControllerAlarmAutoBiasFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmAutoBiasFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmAutoBiasFail changes state"
+  ::= { vxControllerTrap 1335 }
+
+vxControllerAlarmNoNameplateLicenseTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmNoNameplateLicense }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmNoNameplateLicense changes state"
+  ::= { vxControllerTrap 1334 }
+
+vxControllerAlarmInvalidLicensesTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmInvalidLicenses }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmInvalidLicenses changes state"
+  ::= { vxControllerTrap 1333 }
+
+vxControllerAlarmMissingPtp1PPSTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmMissingPtp1PPS }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmMissingPtp1PPS changes state"
+  ::= { vxControllerTrap 1332 }
+
+vxControllerAlarmSwrCutbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmSwrCutback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmSwrCutback changes state"
+  ::= { vxControllerTrap 1330 }
+
+vxControllerAlarmLowAmbientTempWarningTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowAmbientTempWarning }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowAmbientTempWarning changes state"
+  ::= { vxControllerTrap 1329 }
+
+vxControllerAlarmMissingExt1PPSTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmMissingExt1PPS }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmMissingExt1PPS changes state"
+  ::= { vxControllerTrap 1317 }
+
+vxControllerAlarmFirmwareUpdateFailureTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmFirmwareUpdateFailure }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmFirmwareUpdateFailure changes state"
+  ::= { vxControllerTrap 1306 }
+
+vxControllerAlarmSwrFoldbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmSwrFoldback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmSwrFoldback changes state"
+  ::= { vxControllerTrap 1303 }
+
+vxControllerAlarmFpgaFailureTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmFpgaFailure }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmFpgaFailure changes state"
+  ::= { vxControllerTrap 1300 }
+
+vxControllerAlarmSib2CommFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmSib2CommFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmSib2CommFail changes state"
+  ::= { vxControllerTrap 1297 }
+
+vxControllerAlarmHostNotBootedTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmHostNotBooted }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmHostNotBooted changes state"
+  ::= { vxControllerTrap 1383 }
+
+vxControllerAlarmRfDriveLowTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmRfDriveLow }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmRfDriveLow changes state"
+  ::= { vxControllerTrap 1386 }
+
+vxControllerAlarmLowBackupAudioMpx2Trap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowBackupAudioMpx2 }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowBackupAudioMpx2 changes state"
+  ::= { vxControllerTrap 1368 }
+
+vxControllerAlarmLowBackupAudioPlayerRightTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowBackupAudioPlayerRight }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowBackupAudioPlayerRight changes state"
+  ::= { vxControllerTrap 1366 }
+
+vxControllerAlarmLowBackupAudioMpx1Trap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowBackupAudioMpx1 }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowBackupAudioMpx1 changes state"
+  ::= { vxControllerTrap 1367 }
+
+vxControllerAlarmLowAcInputTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowAcInput }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowAcInput changes state"
+  ::= { vxControllerTrap 1391 }
+
+vxControllerAlarmIpaPsFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmIpaPsFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmIpaPsFail changes state"
+  ::= { vxControllerTrap 1389 }
+
+vxControllerAlarmExciterBootedTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmExciterBooted }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmExciterBooted changes state"
+  ::= { vxControllerTrap 1385 }
+
+vxControllerAlarmHostNotRespondingTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmHostNotResponding }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmHostNotResponding changes state"
+  ::= { vxControllerTrap 1384 }
+
+vxControllerAlarmUnlockAes2Trap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmUnlockAes2 }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmUnlockAes2 changes state"
+  ::= { vxControllerTrap 1382 }
+
+vxControllerAlarmUnlockAes1Trap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmUnlockAes1 }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmUnlockAes1 changes state"
+  ::= { vxControllerTrap 1381 }
+
+vxControllerAlarmUsingAudioBackupTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmUsingAudioBackup }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmUsingAudioBackup changes state"
+  ::= { vxControllerTrap 1379 }
+
+vxControllerAlarmModulationLossShutbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmModulationLossShutback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmModulationLossShutback changes state"
+  ::= { vxControllerTrap 1378 }
+
+vxControllerAlarmModulationLossTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmModulationLoss }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmModulationLoss changes state"
+  ::= { vxControllerTrap 1377 }
+
+vxControllerAlarmLowSca2Aes2LeftTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowSca2Aes2Left }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowSca2Aes2Left changes state"
+  ::= { vxControllerTrap 1376 }
+
+vxControllerAlarmLowSca1Aes1LeftTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowSca1Aes1Left }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowSca1Aes1Left changes state"
+  ::= { vxControllerTrap 1374 }
+
+vxControllerAlarmLowSca1AnalogLeftTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowSca1AnalogLeft }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowSca1AnalogLeft changes state"
+  ::= { vxControllerTrap 1373 }
+
+vxControllerAlarmLowScaMpx1Trap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowScaMpx1 }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowScaMpx1 changes state"
+  ::= { vxControllerTrap 1371 }
+
+vxControllerAlarmLowBackupAudioDmpx2Trap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowBackupAudioDmpx2 }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowBackupAudioDmpx2 changes state"
+  ::= { vxControllerTrap 1370 }
+
+vxControllerAlarmLowBackupAudioAes2RightTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowBackupAudioAes2Right }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowBackupAudioAes2Right changes state"
+  ::= { vxControllerTrap 1364 }
+
+vxControllerAlarmLowBackupAudioAes2LeftTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowBackupAudioAes2Left }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowBackupAudioAes2Left changes state"
+  ::= { vxControllerTrap 1363 }
+
+vxControllerAlarmLowBackupAudioAes1LeftTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowBackupAudioAes1Left }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowBackupAudioAes1Left changes state"
+  ::= { vxControllerTrap 1361 }
+
+vxControllerAlarmHighRejectPowerShutdownTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmHighRejectPowerShutdown }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmHighRejectPowerShutdown changes state"
+  ::= { vxControllerTrap 1393 }
+
+vxControllerAlarmLowACFoldbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowACFoldback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowACFoldback changes state"
+  ::= { vxControllerTrap 1345 }
+
+vxControllerAlarmSummaryExciterFaultTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmSummaryExciterFault }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmSummaryExciterFault changes state"
+  ::= { vxControllerTrap 1281 }
+
+vxControllerAlarmSibCommFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmSibCommFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmSibCommFail changes state"
+  ::= { vxControllerTrap 1296 }
+
+vxControllerAlarmConfigurationErrorTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmConfigurationError }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmConfigurationError changes state"
+  ::= { vxControllerTrap 1302 }
+
+vxControllerAlarmFirmwareUpdateTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmFirmwareUpdate }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmFirmwareUpdate changes state"
+  ::= { vxControllerTrap 1305 }
+
+vxControllerAlarmHighAmbientTempWarningTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmHighAmbientTempWarning }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmHighAmbientTempWarning changes state"
+  ::= { vxControllerTrap 1327 }
+
+vxControllerAlarmAudioAnalogLeftLowTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmAudioAnalogLeftLow }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmAudioAnalogLeftLow changes state"
+  ::= { vxControllerTrap 1347 }
+
+vxControllerAlarmLowAudioPlayerRightTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowAudioPlayerRight }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowAudioPlayerRight changes state"
+  ::= { vxControllerTrap 1354 }
+
+vxControllerAlarmLowScaMpx2Trap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowScaMpx2 }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowScaMpx2 changes state"
+  ::= { vxControllerTrap 1372 }
+
+vxControllerAlarmRfDriveHighTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmRfDriveHigh }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmRfDriveHigh changes state"
+  ::= { vxControllerTrap 1387 }
+
+vxControllerAlarmPilotUnsyncedTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPilotUnsynced }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPilotUnsynced changes state"
+  ::= { vxControllerTrap 1398 }
+
+vxControllerAlarmLowAudioMpx2Trap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowAudioMpx2 }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowAudioMpx2 changes state"
+  ::= { vxControllerTrap 1356 }
+
+vxControllerAlarmHighRejectPowerFoldbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmHighRejectPowerFoldback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmHighRejectPowerFoldback changes state"
+  ::= { vxControllerTrap 1392 }
+
+vxControllerAlarmLowBackupAudioAnalogLeftTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmLowBackupAudioAnalogLeft }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmLowBackupAudioAnalogLeft changes state"
+  ::= { vxControllerTrap 1359 }
+
+vxControllerAlarmRfSampleFaultTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmRfSampleFault }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmRfSampleFault changes state"
+  ::= { vxControllerTrap 1399 }
+
+vxControllerAlarmExciterControllerSwrShutdownTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmExciterControllerSwrShutdown }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmExciterControllerSwrShutdown changes state"
+  ::= { vxControllerTrap 1400 }
+
+vxControllerAlarmPaFailFoldbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPaFailFoldback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPaFailFoldback changes state"
+  ::= { vxControllerTrap 1401 }
+
+vxControllerAlarmPsFailFoldbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPsFailFoldback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPsFailFoldback changes state"
+  ::= { vxControllerTrap 1402 }
+
+vxControllerAlarmPaPsFailShutdownTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmPaPsFailShutdown }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmPaPsFailShutdown changes state"
+  ::= { vxControllerTrap 1403 }
+
+vxControllerAlarmTemperatureSensorFailureTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmTemperatureSensorFailure }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmTemperatureSensorFailure changes state"
+  ::= { vxControllerTrap 1404 }
+
+vxControllerAlarmTransferCtrlCommFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerAlarmTransferCtrlCommFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerAlarmTransferCtrlCommFail changes state"
+  ::= { vxControllerTrap 1405 }
+
+vxControllerSchedulerOnOffTrap NOTIFICATION-TYPE
+    OBJECTS { vxControllerSchedulerOnOff }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxControllerSchedulerOnOff changes state"
+  ::= { vxControllerTrap 4164 }
+
+vxSibAlarmFan1FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxSibAlarmFan1Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxSibAlarmFan1Fail changes state"
+  ::= { vxSibTrap 1300 }
+
+vxSibAlarmNoExciterCommsTrap NOTIFICATION-TYPE
+    OBJECTS { vxSibAlarmNoExciterComms }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxSibAlarmNoExciterComms changes state"
+  ::= { vxSibTrap 1310 }
+
+vxSibAlarmFan2LowSpeedTrap NOTIFICATION-TYPE
+    OBJECTS { vxSibAlarmFan2LowSpeed }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxSibAlarmFan2LowSpeed changes state"
+  ::= { vxSibTrap 1306 }
+
+vxSibAlarmFan1LowSpeedTrap NOTIFICATION-TYPE
+    OBJECTS { vxSibAlarmFan1LowSpeed }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxSibAlarmFan1LowSpeed changes state"
+  ::= { vxSibTrap 1305 }
+
+vxSibAlarmFan2FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxSibAlarmFan2Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxSibAlarmFan2Fail changes state"
+  ::= { vxSibTrap 1301 }
+
+vxSibAlarmIpaFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxSibAlarmIpaFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxSibAlarmIpaFail changes state"
+  ::= { vxSibTrap 1299 }
+
+vxSibAlarmPa2FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxSibAlarmPa2Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxSibAlarmPa2Fail changes state"
+  ::= { vxSibTrap 1294 }
+
+vxSibAlarmPa1FailTrap NOTIFICATION-TYPE
+    OBJECTS { vxSibAlarmPa1Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxSibAlarmPa1Fail changes state"
+  ::= { vxSibTrap 1293 }
+
+vxSibAlarmPsAFailTrap NOTIFICATION-TYPE
+    OBJECTS { vxSibAlarmPsAFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxSibAlarmPsAFail changes state"
+  ::= { vxSibTrap 1290 }
+
+vxSibAlarmPsANotCompatibleTrap NOTIFICATION-TYPE
+    OBJECTS { vxSibAlarmPsANotCompatible }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxSibAlarmPsANotCompatible changes state"
+  ::= { vxSibTrap 1287 }
+
+vxSibAlarmPsANotCommunicatingTrap NOTIFICATION-TYPE
+    OBJECTS { vxSibAlarmPsANotCommunicating }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxSibAlarmPsANotCommunicating changes state"
+  ::= { vxSibTrap 1284 }
+
+vxSibAlarmSwrShutbackTrap NOTIFICATION-TYPE
+    OBJECTS { vxSibAlarmSwrShutback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxSibAlarmSwrShutback changes state"
+  ::= { vxSibTrap 1280 }
+
+vxSibAlarmPsANotInstalledTrap NOTIFICATION-TYPE
+    OBJECTS { vxSibAlarmPsANotInstalled }
+    STATUS current
+    DESCRIPTION
+        "Sent when vxSibAlarmPsANotInstalled changes state"
+  ::= { vxSibTrap 1281 }
+
+
+END

@@ -1,0 +1,3111 @@
+NAUTEL-VS-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+  MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE FROM SNMPv2-SMI
+  OBJECT-GROUP, NOTIFICATION-GROUP FROM SNMPv2-CONF
+  TEXTUAL-CONVENTION FROM SNMPv2-TC
+  products, groups, Tenths, Hundredths, Thousandths, RfState, Millionths, LocalRemote, OnOff, AorB, OpenClosed, TrueFalse, YesNo FROM NAUTEL-MIB
+;
+
+vs MODULE-IDENTITY
+  LAST-UPDATED "201802221600Z"
+  ORGANIZATION "www.nautel.com"
+  CONTACT-INFO
+  "postal: Nautel Limited
+           10089 Peggy's Cove Road
+           Hackett's Cove NS  B3Z 3J4
+           Canada   
+   email:  support@nautel.com"
+  DESCRIPTION "The MIB module for Nautel VS systems"
+  REVISION    "201802221600Z"
+  DESCRIPTION "Deprecated IncDecPower"
+  REVISION    "201802221200Z"
+  DESCRIPTION "Updated traps to notifications and corrected syntax for SNMP v2"
+  REVISION    "201611211443Z"
+  DESCRIPTION "Added MeterCarrierFrequency"
+  REVISION    "201604111507Z"
+  DESCRIPTION "Nautel SNMP Subagent 4.2"
+  REVISION    "201205180000Z"
+  DESCRIPTION "Initial release: Auto generated"
+  ::= { products 300 }
+
+--
+-- Textual Conventions
+--
+
+VsTransmitterType::= TEXTUAL-CONVENTION
+  STATUS    current
+  DESCRIPTION "VS Transmitter Model"
+  SYNTAX   INTEGER { vs300(0), vs1K(1), vs2500(2), vs3K(3) }
+
+VsExciterType::= TEXTUAL-CONVENTION
+  STATUS    current
+  DESCRIPTION "VS Exciter Model"
+  SYNTAX   INTEGER { internal(0), external(1), hd(2) }
+
+
+--
+-- Top level structure
+--
+
+vsController OBJECT IDENTIFIER ::= { vs 256 }
+vsActiveExciter OBJECT IDENTIFIER ::= { vs 1025 }
+vsTraps OBJECT IDENTIFIER ::= { vs 0 }
+vsGroups OBJECT IDENTIFIER ::= { groups 300 }
+vsCurrent OBJECT IDENTIFIER ::= { vsGroups 1 }
+vsDeprecated OBJECT IDENTIFIER ::= { vsGroups 2 }
+vsCurrentDeviceGroups OBJECT IDENTIFIER ::= { vsCurrent 1 }
+vsCurrentTrapGroups OBJECT IDENTIFIER ::= { vsCurrent 2 }
+vsDeprecatedDeviceGroups OBJECT IDENTIFIER ::= { vsDeprecated 1 }
+vsDeprecatedTrapGroups OBJECT IDENTIFIER ::= { vsDeprecated 2 }
+
+--
+-- Group definitions
+--
+vsControllerCurrentGroup OBJECT-GROUP
+  OBJECTS {
+    vsControllerReset,
+    vsControllerLocalRemote,
+    vsControllerRfOnOff,
+    vsControllerMainExciter,
+    vsControllerActiveExciter,
+    vsControllerForwardRmsPower,
+    vsControllerReflectedRmsPower,
+    vsControllerFinalRejectPower,
+    vsControllerPaVoltsSampleA,
+    vsControllerPreampCurrent,
+    vsControllerTotalIpaCurrent,
+    vsControllerPaCurrent1,
+    vsControllerPaCurrent2,
+    vsControllerPaCurrent3,
+    vsControllerPaCurrent4,
+    vsControllerHeatsinkTemperature,
+    vsControllerHeatsinkTemperature2,
+    vsControllerPlus48vMeter,
+    vsControllerPlus15vMeter,
+    vsControllerMinus15vMeter,
+    vsControllerPlus5vMeter,
+    vsControllerPlus33vMeter,
+    vsControllerPlus18vMeter,
+    vsControllerPlus12vMeter,
+    vsControllerBatteryPowerMeter,
+    vsControllerFanRpm1,
+    vsControllerFanRpm2,
+    vsControllerFanRpm3,
+    vsControllerFanRpm4,
+    vsControllerFanRpm5,
+    vsControllerFanRpm6,
+    vsControllerFanRpm7,
+    vsControllerVswr,
+    vsControllerPa1Reject,
+    vsControllerPa2Reject,
+    vsControllerPa3Reject,
+    vsControllerPa4Reject,
+    vsControllerIpaPower,
+    vsControllerTotalPaCurrent,
+    vsControllerDcPowerIn,
+    vsControllerDcEfficiency,
+    vsControllerPowerPerActivePa,
+    vsControllerAveragePaVolts,
+    vsControllerPa12RejectPower,
+    vsControllerPa34RejectPower,
+    vsControllerAveragePaDissipation,
+    vsControllerPaBias1,
+    vsControllerPaBias2,
+    vsControllerPaBias3,
+    vsControllerPaBias4,
+    vsControllerIpaBias,
+    vsControllerPreampBias,
+    vsControllerAlarmTransmitterRfOff,
+    vsControllerAlarmExternalInterlock,
+    vsControllerAlarmPreampFail,
+    vsControllerAlarmIpaFail,
+    vsControllerAlarmIpaOutputLow,
+    vsControllerAlarmIpaOutputHigh,
+    vsControllerAlarmPa1Fail,
+    vsControllerAlarmPa2Fail,
+    vsControllerAlarmPa3Fail,
+    vsControllerAlarmPa4Fail,
+    vsControllerAlarmAllPowerAmplifiersInactive,
+    vsControllerAlarmPaAMissing,
+    vsControllerAlarmPsAAcFail,
+    vsControllerAlarmPsAOverTemperature,
+    vsControllerAlarmPsAFail,
+    vsControllerAlarmPaBMissing,
+    vsControllerAlarmPsBAcFail,
+    vsControllerAlarmPsBOverTemperature,
+    vsControllerAlarmPsBFail,
+    vsControllerAlarmPaCMissing,
+    vsControllerAlarmPsCAcFail,
+    vsControllerAlarmPsCOverTemperature,
+    vsControllerAlarmPsCFail,
+    vsControllerAlarmPaVoltsAFail,
+    vsControllerAlarmFan1Fail,
+    vsControllerAlarmFan2Fail,
+    vsControllerAlarmFan3Fail,
+    vsControllerAlarmFan4Fail,
+    vsControllerAlarmFan5Fail,
+    vsControllerAlarmInsufficientFansActive,
+    vsControllerAlarmPaOverTemperature,
+    vsControllerAlarmIntakeOverTemperature,
+    vsControllerAlarmHighTemperatureLatch,
+    vsControllerAlarmPlus15vFail,
+    vsControllerAlarmMinus15vFail,
+    vsControllerAlarm5vFail,
+    vsControllerAlarm33vFail,
+    vsControllerAlarm18vFail,
+    vsControllerAlarm12vFail,
+    vsControllerAlarmLowBackupBattery,
+    vsControllerAlarm48vFail,
+    vsControllerAlarmSwrShutback,
+    vsControllerAlarmHighReflectedPower,
+    vsControllerAlarmSwrFoldback,
+    vsControllerAlarmHighSwrShutdown,
+    vsControllerAlarmCutbackSummary,
+    vsControllerAlarmPerPaFoldback,
+    vsControllerAlarmHighReject,
+    vsControllerAlarmRejectFoldback,
+    vsControllerAlarmRejectShutback,
+    vsControllerAlarmHighFwdPower,
+    vsControllerAlarmFwdPowerLimiting,
+    vsControllerAlarmFwdPowerShutdown,
+    vsControllerAlarmDeadPaFoldback,
+    vsControllerAlarmFwdPowerLow,
+    vsControllerAlarmFwdPowerLowLow,
+    vsControllerAlarmResidualPaVoltsPresent,
+    vsControllerAlarmDischargingPaVolts,
+    vsControllerAlarmRunningBiasRoutine,
+    vsControllerAlarmSummary,
+    vsControllerAlarmAcSummary,
+    vsControllerAlarmExternalSummary,
+    vsControllerAlarmAudioLossSummary,
+    vsControllerAlarmLowBatteryMemorySummary,
+    vsControllerAlarmOffAirCriticalSummary,
+    vsControllerAlarmReducedPowerSummary,
+    vsControllerAlarmMaintenanceRequiredSummary,
+    vsControllerAlarmHighTemperatureSummary,
+    vsControllerAlarmHighReflectedSummary,
+    vsControllerAlarmPsSummary,
+    vsControllerAlarmPaSummary,
+    vsControllerAlarmExciterSummary,
+    vsControllerAlarmOutputNetworkSummary,
+    vsControllerAlarmHdSummary,
+    vsControllerAlarmMutedTransmitterOutput,
+    vsControllerAlarmInhibitedPaPs,
+    vsControllerAlarmMutedIpaOutput,
+    vsControllerAlarmMutedPreampOutput,
+    vsControllerAlarmMutedExciterOutput,
+    vsControllerAlarmPsCurrentFoldback,
+    vsControllerAlarmFan6Fail,
+    vsControllerAlarmFan7Fail,
+    vsControllerTransmitterType,
+    vsControllerActivePresetIndex,
+    vsControllerSetPower,
+    vsControllerMeterCarrierFrequency
+  }
+  STATUS current
+  DESCRIPTION
+  "A collection of objects for the vsController"
+  ::= { vsCurrentDeviceGroups 21 }
+
+vsActiveExciterCurrentGroup OBJECT-GROUP
+  OBJECTS {
+    vsActiveExciterMeterForwardPower,
+    vsActiveExciterMeterReflectedPower,
+    vsActiveExciterMeterIpaVolts,
+    vsActiveExciterMeterPlus15V,
+    vsActiveExciterMeterMinus15V,
+    vsActiveExciterMeter5V,
+    vsActiveExciterMeter33V,
+    vsActiveExciterMeter12V,
+    vsActiveExciterMeterBatteryPower,
+    vsActiveExciterMeterFanRpm,
+    vsActiveExciterMeterAudioLeftPeak,
+    vsActiveExciterMeterAudioRightPeak,
+    vsActiveExciterMeterAudioMpxPeak,
+    vsActiveExciterMeterAudioSca1Peak,
+    vsActiveExciterMeterAudioSca2Peak,
+    vsActiveExciterMeterAudioDig1LPeak,
+    vsActiveExciterMeterAudioDig1RPeak,
+    vsActiveExciterMeterAudioDig2LPeak,
+    vsActiveExciterMeterAudioDig2RPeak,
+    vsActiveExciterMeterAudioMpxScaPeak,
+    vsActiveExciterMeterDeviationPeak,
+    vsActiveExciterMeterMpxRms,
+    vsActiveExciterMeterAgcGain,
+    vsActiveExciterMeterMpxPowerGain,
+    vsActiveExciterMeterFwdPathAtten,
+    vsActiveExciterMeterDacGain,
+    vsActiveExciterAlarmSwrShutback,
+    vsActiveExciterAlarmNoHdData,
+    vsActiveExciterAlarmNoExgine10MHz,
+    vsActiveExciterAlarmNoReversePath,
+    vsActiveExciterAlarmExgineNotBooted,
+    vsActiveExciterAlarmFpgaTestFailed,
+    vsActiveExciterAlarmEnteredFirmwareUpgrade,
+    vsActiveExciterAlarmUnsignedDspImage,
+    vsActiveExciterAlarmUnsignedFpgaImage,
+    vsActiveExciterAlarmNeedRebootForSettings,
+    vsActiveExciterAlarmExgineOffline,
+    vsActiveExciterAlarmDeadAir,
+    vsActiveExciterAlarmPllUnlock,
+    vsActiveExciterAlarmSrc1Unlock,
+    vsActiveExciterAlarmSrc2Unlock,
+    vsActiveExciterAlarmAudioShutDown,
+    vsActiveExciterAlarmPaOverTemperature,
+    vsActiveExciterAlarmNo1Pps,
+    vsActiveExciterAlarmPilotUnsync,
+    vsActiveExciterAlarmFanFail,
+    vsActiveExciterAlarmPlus15VFail,
+    vsActiveExciterAlarmMinus15VFail,
+    vsActiveExciterAlarm5VFail,
+    vsActiveExciterAlarm33VFail,
+    vsActiveExciterAlarm12VFail,
+    vsActiveExciterAlarmLowBackupBattery,
+    vsActiveExciterAlarmPaVoltsFail,
+    vsActiveExciterAlarmAudioAnalogLeftLow,
+    vsActiveExciterAlarmAudioAnalogRightLow,
+    vsActiveExciterAlarmAudioDigital1Low,
+    vsActiveExciterAlarmAudioDigital2Low,
+    vsActiveExciterAlarmAudioSca1Low,
+    vsActiveExciterAlarmAudioSca2Low,
+    vsActiveExciterAlarmAudioCompositeLow,
+    vsActiveExciterAlarmMissingExternalPreset,
+    vsActiveExciterAlarmNoTransmitterComms,
+    vsActiveExciterAlarmNoActive10MHz,
+    vsActiveExciterAlarmExternal10MHz,
+    vsActiveExciterAlarmZeroedHdData,
+    vsActiveExciterAlarmHighTxSample,
+    vsActiveExciterAlarmPaDataCleared,
+    vsActiveExciterAlarmPaNotPresent,
+    vsActiveExciterAlarmExgineMisconfigured,
+    vsActiveExciterAlarmAudioProcessorOffline,
+    vsActiveExciterAlarmAudioProcessorOutputFault,
+    vsActiveExciterMainAudioLowTripLevel,
+    vsActiveExciterUseExternal10mhz
+  }
+  STATUS current
+  DESCRIPTION
+  "A collection of objects for the vsActiveExciter"
+  ::= { vsCurrentDeviceGroups 22 }
+
+vsControllerDeprecatedGroup OBJECT-GROUP
+  OBJECTS {
+    vsControllerPsCurrentA,
+    vsControllerIncDecPower
+  }
+  STATUS deprecated
+  DESCRIPTION
+  "A collection of objects for the vsController"
+  ::= { vsDeprecatedDeviceGroups 21 }
+
+vsCurrentTrapGroup NOTIFICATION-GROUP
+  NOTIFICATIONS {
+    vsControllerAlarmTransmitterRfOffTrap,
+    vsControllerAlarmExternalInterlockTrap,
+    vsControllerAlarmPreampFailTrap,
+    vsControllerAlarmIpaFailTrap,
+    vsControllerAlarmIpaOutputLowTrap,
+    vsControllerAlarmIpaOutputHighTrap,
+    vsControllerAlarmPa1FailTrap,
+    vsControllerAlarmPa2FailTrap,
+    vsControllerAlarmPa3FailTrap,
+    vsControllerAlarmPa4FailTrap,
+    vsControllerAlarmAllPowerAmplifiersInactiveTrap,
+    vsControllerAlarmPaAMissingTrap,
+    vsControllerAlarmPsAAcFailTrap,
+    vsControllerAlarmPsAOverTemperatureTrap,
+    vsControllerAlarmPsAFailTrap,
+    vsControllerAlarmPaBMissingTrap,
+    vsControllerAlarmPsBAcFailTrap,
+    vsControllerAlarmPsBOverTemperatureTrap,
+    vsControllerAlarmPsBFailTrap,
+    vsControllerAlarmPaCMissingTrap,
+    vsControllerAlarmPsCAcFailTrap,
+    vsControllerAlarmPsCOverTemperatureTrap,
+    vsControllerAlarmPsCFailTrap,
+    vsControllerAlarmPaVoltsAFailTrap,
+    vsControllerAlarmFan1FailTrap,
+    vsControllerAlarmFan2FailTrap,
+    vsControllerAlarmFan3FailTrap,
+    vsControllerAlarmFan4FailTrap,
+    vsControllerAlarmFan5FailTrap,
+    vsControllerAlarmInsufficientFansActiveTrap,
+    vsControllerAlarmPaOverTemperatureTrap,
+    vsControllerAlarmIntakeOverTemperatureTrap,
+    vsControllerAlarmHighTemperatureLatchTrap,
+    vsControllerAlarmPlus15vFailTrap,
+    vsControllerAlarmMinus15vFailTrap,
+    vsControllerAlarm5vFailTrap,
+    vsControllerAlarm33vFailTrap,
+    vsControllerAlarm18vFailTrap,
+    vsControllerAlarm12vFailTrap,
+    vsControllerAlarmLowBackupBatteryTrap,
+    vsControllerAlarm48vFailTrap,
+    vsControllerAlarmSwrShutbackTrap,
+    vsControllerAlarmHighReflectedPowerTrap,
+    vsControllerAlarmSwrFoldbackTrap,
+    vsControllerAlarmHighSwrShutdownTrap,
+    vsControllerAlarmCutbackSummaryTrap,
+    vsControllerAlarmPerPaFoldbackTrap,
+    vsControllerAlarmHighRejectTrap,
+    vsControllerAlarmRejectFoldbackTrap,
+    vsControllerAlarmRejectShutbackTrap,
+    vsControllerAlarmHighFwdPowerTrap,
+    vsControllerAlarmFwdPowerLimitingTrap,
+    vsControllerAlarmFwdPowerShutdownTrap,
+    vsControllerAlarmDeadPaFoldbackTrap,
+    vsControllerAlarmFwdPowerLowTrap,
+    vsControllerAlarmFwdPowerLowLowTrap,
+    vsControllerAlarmResidualPaVoltsPresentTrap,
+    vsControllerAlarmDischargingPaVoltsTrap,
+    vsControllerAlarmRunningBiasRoutineTrap,
+    vsControllerAlarmSummaryTrap,
+    vsControllerAlarmAcSummaryTrap,
+    vsControllerAlarmExternalSummaryTrap,
+    vsControllerAlarmAudioLossSummaryTrap,
+    vsControllerAlarmLowBatteryMemorySummaryTrap,
+    vsControllerAlarmOffAirCriticalSummaryTrap,
+    vsControllerAlarmReducedPowerSummaryTrap,
+    vsControllerAlarmMaintenanceRequiredSummaryTrap,
+    vsControllerAlarmHighTemperatureSummaryTrap,
+    vsControllerAlarmHighReflectedSummaryTrap,
+    vsControllerAlarmPsSummaryTrap,
+    vsControllerAlarmPaSummaryTrap,
+    vsControllerAlarmExciterSummaryTrap,
+    vsControllerAlarmOutputNetworkSummaryTrap,
+    vsControllerAlarmHdSummaryTrap,
+    vsControllerAlarmMutedTransmitterOutputTrap,
+    vsControllerAlarmInhibitedPaPsTrap,
+    vsControllerAlarmMutedIpaOutputTrap,
+    vsControllerAlarmMutedPreampOutputTrap,
+    vsControllerAlarmMutedExciterOutputTrap,
+    vsControllerAlarmPsCurrentFoldbackTrap,
+    vsControllerAlarmFan6FailTrap,
+    vsControllerAlarmFan7FailTrap,
+    vsActiveExciterAlarmSwrShutbackTrap,
+    vsActiveExciterAlarmNoHdDataTrap,
+    vsActiveExciterAlarmNoExgine10MHzTrap,
+    vsActiveExciterAlarmNoReversePathTrap,
+    vsActiveExciterAlarmExgineNotBootedTrap,
+    vsActiveExciterAlarmFpgaTestFailedTrap,
+    vsActiveExciterAlarmEnteredFirmwareUpgradeTrap,
+    vsActiveExciterAlarmUnsignedDspImageTrap,
+    vsActiveExciterAlarmUnsignedFpgaImageTrap,
+    vsActiveExciterAlarmNeedRebootForSettingsTrap,
+    vsActiveExciterAlarmExgineOfflineTrap,
+    vsActiveExciterAlarmDeadAirTrap,
+    vsActiveExciterAlarmPllUnlockTrap,
+    vsActiveExciterAlarmSrc1UnlockTrap,
+    vsActiveExciterAlarmSrc2UnlockTrap,
+    vsActiveExciterAlarmAudioShutDownTrap,
+    vsActiveExciterAlarmPaOverTemperatureTrap,
+    vsActiveExciterAlarmNo1PpsTrap,
+    vsActiveExciterAlarmPilotUnsyncTrap,
+    vsActiveExciterAlarmFanFailTrap,
+    vsActiveExciterAlarmPlus15VFailTrap,
+    vsActiveExciterAlarmMinus15VFailTrap,
+    vsActiveExciterAlarm5VFailTrap,
+    vsActiveExciterAlarm33VFailTrap,
+    vsActiveExciterAlarm12VFailTrap,
+    vsActiveExciterAlarmLowBackupBatteryTrap,
+    vsActiveExciterAlarmPaVoltsFailTrap,
+    vsActiveExciterAlarmAudioAnalogLeftLowTrap,
+    vsActiveExciterAlarmAudioAnalogRightLowTrap,
+    vsActiveExciterAlarmAudioDigital1LowTrap,
+    vsActiveExciterAlarmAudioDigital2LowTrap,
+    vsActiveExciterAlarmAudioSca1LowTrap,
+    vsActiveExciterAlarmAudioSca2LowTrap,
+    vsActiveExciterAlarmAudioCompositeLowTrap,
+    vsActiveExciterAlarmMissingExternalPresetTrap,
+    vsActiveExciterAlarmNoTransmitterCommsTrap,
+    vsActiveExciterAlarmNoActive10MHzTrap,
+    vsActiveExciterAlarmExternal10MHzTrap,
+    vsActiveExciterAlarmZeroedHdDataTrap,
+    vsActiveExciterAlarmHighTxSampleTrap,
+    vsActiveExciterAlarmPaDataClearedTrap,
+    vsActiveExciterAlarmPaNotPresentTrap,
+    vsActiveExciterAlarmExgineMisconfiguredTrap,
+    vsActiveExciterAlarmAudioProcessorOfflineTrap,
+    vsActiveExciterAlarmAudioProcessorOutputFaultTrap
+  }
+  STATUS current
+  DESCRIPTION
+  "A collection of notifications for the vs"
+  ::= { vsCurrentTrapGroups 1 }
+
+--
+-- Channel definitions
+--
+
+vsControllerReset OBJECT-TYPE
+  SYNTAX INTEGER(0..1)
+  MAX-ACCESS read-write
+  STATUS current
+  DESCRIPTION
+  "Reset (any value will cause reset - use 1)"
+  ::= { vsController 7 }
+
+vsControllerLocalRemote OBJECT-TYPE
+  SYNTAX LocalRemote
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Remote Enabled (local=0, remote=1)"
+  ::= { vsController 8 }
+
+vsControllerRfOnOff OBJECT-TYPE
+  SYNTAX RfState
+  MAX-ACCESS read-write
+  STATUS current
+  DESCRIPTION
+  "RF On/Off (0 = OFF, 1 = ON, 2 = INHIBITED)"
+  ::= { vsController 35 }
+
+vsControllerMainExciter OBJECT-TYPE
+  SYNTAX VsExciterType
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Main Exciter (A = internal, B = external)"
+  ::= { vsController 36 }
+
+vsControllerActiveExciter OBJECT-TYPE
+  SYNTAX VsExciterType
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Active Exciter (A = internal, B = external)"
+  ::= { vsController 42 }
+
+vsControllerForwardRmsPower OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Forward Power"
+  ::= { vsController 256 }
+
+vsControllerReflectedRmsPower OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Reflected Power"
+  ::= { vsController 257 }
+
+vsControllerFinalRejectPower OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Final Reject Power"
+  ::= { vsController 258 }
+
+vsControllerPaVoltsSampleA OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA Volts A"
+  ::= { vsController 259 }
+
+vsControllerPreampCurrent OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "A"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Pre-Amp Current"
+  ::= { vsController 261 }
+
+vsControllerTotalIpaCurrent OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "A"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "IPA Current"
+  ::= { vsController 262 }
+
+vsControllerPaCurrent1 OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "A"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 1 Current"
+  ::= { vsController 263 }
+
+vsControllerPaCurrent2 OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "A"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 2 Current"
+  ::= { vsController 264 }
+
+vsControllerPaCurrent3 OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "A"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 3 Current"
+  ::= { vsController 265 }
+
+vsControllerPaCurrent4 OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "A"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 4 Current"
+  ::= { vsController 266 }
+
+vsControllerHeatsinkTemperature OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "C"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Heatsink Temperature 1"
+  ::= { vsController 271 }
+
+vsControllerHeatsinkTemperature2 OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "C"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Heatsink Temperature 2"
+  ::= { vsController 272 }
+
+vsControllerPlus48vMeter OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "LVPS Input Voltage"
+  ::= { vsController 273 }
+
+vsControllerPlus15vMeter OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+15V"
+  ::= { vsController 274 }
+
+vsControllerMinus15vMeter OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "-15V"
+  ::= { vsController 275 }
+
+vsControllerPlus5vMeter OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+5V"
+  ::= { vsController 276 }
+
+vsControllerPlus33vMeter OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+3.3V"
+  ::= { vsController 277 }
+
+vsControllerPlus18vMeter OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+1.8V"
+  ::= { vsController 278 }
+
+vsControllerPlus12vMeter OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+1.2V"
+  ::= { vsController 279 }
+
+vsControllerBatteryPowerMeter OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Battery Voltage"
+  ::= { vsController 280 }
+
+vsControllerFanRpm1 OBJECT-TYPE
+  SYNTAX INTEGER
+  UNITS "rpm"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan 1 Tach"
+  ::= { vsController 281 }
+
+vsControllerFanRpm2 OBJECT-TYPE
+  SYNTAX INTEGER
+  UNITS "rpm"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan 2 Tach"
+  ::= { vsController 282 }
+
+vsControllerFanRpm3 OBJECT-TYPE
+  SYNTAX INTEGER
+  UNITS "rpm"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan 3 Tach"
+  ::= { vsController 283 }
+
+vsControllerFanRpm4 OBJECT-TYPE
+  SYNTAX INTEGER
+  UNITS "rpm"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan 4 Tach"
+  ::= { vsController 284 }
+
+vsControllerFanRpm5 OBJECT-TYPE
+  SYNTAX INTEGER
+  UNITS "rpm"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan 5 Tach"
+  ::= { vsController 285 }
+
+vsControllerFanRpm6 OBJECT-TYPE
+  SYNTAX INTEGER
+  UNITS "rpm"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  ""
+  ::= { vsController 343 }
+
+vsControllerFanRpm7 OBJECT-TYPE
+  SYNTAX INTEGER
+  UNITS "rpm"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  ""
+  ::= { vsController 344 }
+
+vsControllerVswr OBJECT-TYPE
+  SYNTAX Thousandths
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "VSWR"
+  ::= { vsController 303 }
+
+vsControllerPa1Reject OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 1 Reject"
+  ::= { vsController 305 }
+
+vsControllerPa2Reject OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 2 Reject"
+  ::= { vsController 306 }
+
+vsControllerPa3Reject OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 3 Reject"
+  ::= { vsController 307 }
+
+vsControllerPa4Reject OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 4 Reject"
+  ::= { vsController 308 }
+
+vsControllerIpaPower OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "IPA Forward Power"
+  ::= { vsController 313 }
+
+vsControllerPsCurrentA OBJECT-TYPE
+  SYNTAX Thousandths
+  MAX-ACCESS read-only
+  STATUS deprecated
+  DESCRIPTION
+  "Deprecated, Not Used."
+  ::= { vsController 314 }
+
+vsControllerTotalPaCurrent OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "A"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Total PA Current"
+  ::= { vsController 316 }
+
+vsControllerDcPowerIn OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "DC Input Power"
+  ::= { vsController 317 }
+
+vsControllerDcEfficiency OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "%"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "DC-RF Efficiency"
+  ::= { vsController 318 }
+
+vsControllerPowerPerActivePa OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Average Active PA Power"
+  ::= { vsController 319 }
+
+vsControllerAveragePaVolts OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Average PA Voltage"
+  ::= { vsController 320 }
+
+vsControllerPa12RejectPower OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Reject Star 1"
+  ::= { vsController 323 }
+
+vsControllerPa34RejectPower OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Reject Star 2"
+  ::= { vsController 324 }
+
+vsControllerAveragePaDissipation OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Average PA Dissipation"
+  ::= { vsController 326 }
+
+vsControllerPaBias1 OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 1 Bias"
+  ::= { vsController 327 }
+
+vsControllerPaBias2 OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 2 Bias"
+  ::= { vsController 328 }
+
+vsControllerPaBias3 OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 3 Bias"
+  ::= { vsController 329 }
+
+vsControllerPaBias4 OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 4 Bias"
+  ::= { vsController 330 }
+
+vsControllerIpaBias OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "IPA Bias"
+  ::= { vsController 335 }
+
+vsControllerPreampBias OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Pre-Amp Bias"
+  ::= { vsController 336 }
+
+vsControllerAlarmTransmitterRfOff OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Transmitter RF Off (on=1, off=0)"
+  ::= { vsController 1536 }
+
+vsControllerAlarmExternalInterlock OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "External Interlock Open (on=1, off=0)"
+  ::= { vsController 1537 }
+
+vsControllerAlarmPreampFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Preamp Fail (on=1, off=0)"
+  ::= { vsController 1538 }
+
+vsControllerAlarmIpaFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "IPA Fail (on=1, off=0)"
+  ::= { vsController 1539 }
+
+vsControllerAlarmIpaOutputLow OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "IPA Output Low (on=1, off=0)"
+  ::= { vsController 1540 }
+
+vsControllerAlarmIpaOutputHigh OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "IPA Output High (on=1, off=0)"
+  ::= { vsController 1541 }
+
+vsControllerAlarmPa1Fail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 1 Fail (on=1, off=0)"
+  ::= { vsController 1542 }
+
+vsControllerAlarmPa2Fail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 2 Fail (on=1, off=0)"
+  ::= { vsController 1543 }
+
+vsControllerAlarmPa3Fail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 3 Fail (on=1, off=0)"
+  ::= { vsController 1544 }
+
+vsControllerAlarmPa4Fail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA 4 Fail (on=1, off=0)"
+  ::= { vsController 1545 }
+
+vsControllerAlarmAllPowerAmplifiersInactive OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "All Power Amplifiers Inactive (on=1, off=0)"
+  ::= { vsController 1550 }
+
+vsControllerAlarmPaAMissing OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PS A Missing (on=1, off=0)"
+  ::= { vsController 1551 }
+
+vsControllerAlarmPsAAcFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PS A AC Fail (on=1, off=0)"
+  ::= { vsController 1552 }
+
+vsControllerAlarmPsAOverTemperature OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PS A Over Temperature (on=1, off=0)"
+  ::= { vsController 1553 }
+
+vsControllerAlarmPsAFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PS A Fail (on=1, off=0)"
+  ::= { vsController 1554 }
+
+vsControllerAlarmPaBMissing OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PS B Missing (on=1, off=0)"
+  ::= { vsController 1555 }
+
+vsControllerAlarmPsBAcFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PS B AC Fail (on=1, off=0)"
+  ::= { vsController 1556 }
+
+vsControllerAlarmPsBOverTemperature OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PS B Over Temperature (on=1, off=0)"
+  ::= { vsController 1557 }
+
+vsControllerAlarmPsBFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PS B Fail (on=1, off=0)"
+  ::= { vsController 1558 }
+
+vsControllerAlarmPaCMissing OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PS C Missing (on=1, off=0)"
+  ::= { vsController 1559 }
+
+vsControllerAlarmPsCAcFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PS C AC Fail (on=1, off=0)"
+  ::= { vsController 1560 }
+
+vsControllerAlarmPsCOverTemperature OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PS C Over Temperature (on=1, off=0)"
+  ::= { vsController 1561 }
+
+vsControllerAlarmPsCFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PS C Fail (on=1, off=0)"
+  ::= { vsController 1562 }
+
+vsControllerAlarmPaVoltsAFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA Volts Fail (on=1, off=0)"
+  ::= { vsController 1563 }
+
+vsControllerAlarmFan1Fail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan 1 Fail (on=1, off=0)"
+  ::= { vsController 1565 }
+
+vsControllerAlarmFan2Fail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan 2 Fail (on=1, off=0)"
+  ::= { vsController 1566 }
+
+vsControllerAlarmFan3Fail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan 3 Fail (on=1, off=0)"
+  ::= { vsController 1567 }
+
+vsControllerAlarmFan4Fail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan 4 Fail (on=1, off=0)"
+  ::= { vsController 1568 }
+
+vsControllerAlarmFan5Fail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan 5 Fail (on=1, off=0)"
+  ::= { vsController 1569 }
+
+vsControllerAlarmInsufficientFansActive OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Insufficient Fans Active (on=1, off=0)"
+  ::= { vsController 1570 }
+
+vsControllerAlarmPaOverTemperature OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA Over Temperature (on=1, off=0)"
+  ::= { vsController 1571 }
+
+vsControllerAlarmIntakeOverTemperature OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Intake Over Temperature (on=1, off=0)"
+  ::= { vsController 1572 }
+
+vsControllerAlarmHighTemperatureLatch OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "High Temperature Latch (on=1, off=0)"
+  ::= { vsController 1573 }
+
+vsControllerAlarmPlus15vFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+15V Fail (on=1, off=0)"
+  ::= { vsController 1579 }
+
+vsControllerAlarmMinus15vFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "-15V Fail (on=1, off=0)"
+  ::= { vsController 1580 }
+
+vsControllerAlarm5vFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+5V Fail (on=1, off=0)"
+  ::= { vsController 1581 }
+
+vsControllerAlarm33vFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+3.3V Fail (on=1, off=0)"
+  ::= { vsController 1582 }
+
+vsControllerAlarm18vFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+1.8V Fail (on=1, off=0)"
+  ::= { vsController 1583 }
+
+vsControllerAlarm12vFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+1.2V Fail (on=1, off=0)"
+  ::= { vsController 1584 }
+
+vsControllerAlarmLowBackupBattery OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Low Battery (on=1, off=0)"
+  ::= { vsController 1585 }
+
+vsControllerAlarm48vFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "LVPS Fail (on=1, off=0)"
+  ::= { vsController 1586 }
+
+vsControllerAlarmSwrShutback OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "SWR Shutback (on=1, off=0)"
+  ::= { vsController 1587 }
+
+vsControllerAlarmHighReflectedPower OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "High Reflected Power (on=1, off=0)"
+  ::= { vsController 1588 }
+
+vsControllerAlarmSwrFoldback OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "SWR Foldback (on=1, off=0)"
+  ::= { vsController 1589 }
+
+vsControllerAlarmHighSwrShutdown OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "High SWR Shutdown (on=1, off=0)"
+  ::= { vsController 1590 }
+
+vsControllerAlarmCutbackSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Cutback Active (on=1, off=0)"
+  ::= { vsController 1591 }
+
+vsControllerAlarmPerPaFoldback OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA Pwr Foldback (on=1, off=0)"
+  ::= { vsController 1592 }
+
+vsControllerAlarmHighReject OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "High Reject Power (on=1, off=0)"
+  ::= { vsController 1593 }
+
+vsControllerAlarmRejectFoldback OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Reject Foldback (on=1, off=0)"
+  ::= { vsController 1594 }
+
+vsControllerAlarmRejectShutback OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Reject Shutback (on=1, off=0)"
+  ::= { vsController 1595 }
+
+vsControllerAlarmHighFwdPower OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "High Forward Power (on=1, off=0)"
+  ::= { vsController 1596 }
+
+vsControllerAlarmFwdPowerLimiting OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Forward Power Limiting (on=1, off=0)"
+  ::= { vsController 1597 }
+
+vsControllerAlarmFwdPowerShutdown OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Forward Power Shutdown (on=1, off=0)"
+  ::= { vsController 1598 }
+
+vsControllerAlarmDeadPaFoldback OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Dead PA Foldback (on=1, off=0)"
+  ::= { vsController 1599 }
+
+vsControllerAlarmFwdPowerLow OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Forward Power Low (on=1, off=0)"
+  ::= { vsController 1600 }
+
+vsControllerAlarmFwdPowerLowLow OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Forward Power Very Low (on=1, off=0)"
+  ::= { vsController 1601 }
+
+vsControllerAlarmResidualPaVoltsPresent OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Residual PA Volts Present (on=1, off=0)"
+  ::= { vsController 1618 }
+
+vsControllerAlarmDischargingPaVolts OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Discharging PA Volts (on=1, off=0)"
+  ::= { vsController 1619 }
+
+vsControllerAlarmRunningBiasRoutine OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Running Bias Routine (on=1, off=0)"
+  ::= { vsController 1620 }
+
+vsControllerAlarmSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Overall Summary (on=1, off=0)"
+  ::= { vsController 1621 }
+
+vsControllerAlarmAcSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "AC Summary (on=1, off=0)"
+  ::= { vsController 1622 }
+
+vsControllerAlarmExternalSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "External Summary (on=1, off=0)"
+  ::= { vsController 1623 }
+
+vsControllerAlarmAudioLossSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Audio Loss Summary (on=1, off=0)"
+  ::= { vsController 1624 }
+
+vsControllerAlarmLowBatteryMemorySummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Low Battery/Memory Summary (on=1, off=0)"
+  ::= { vsController 1625 }
+
+vsControllerAlarmOffAirCriticalSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Off-Air Summary (on=1, off=0)"
+  ::= { vsController 1626 }
+
+vsControllerAlarmReducedPowerSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Reduced Power Summary (on=1, off=0)"
+  ::= { vsController 1627 }
+
+vsControllerAlarmMaintenanceRequiredSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Maintenance Required Summary (on=1, off=0)"
+  ::= { vsController 1628 }
+
+vsControllerAlarmHighTemperatureSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "High Temperature Summary (on=1, off=0)"
+  ::= { vsController 1629 }
+
+vsControllerAlarmHighReflectedSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "High Reflected Summary (on=1, off=0)"
+  ::= { vsController 1630 }
+
+vsControllerAlarmPsSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Power Supply Summary (on=1, off=0)"
+  ::= { vsController 1631 }
+
+vsControllerAlarmPaSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Power Amplifier Summary (on=1, off=0)"
+  ::= { vsController 1632 }
+
+vsControllerAlarmExciterSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Exciter Summary (on=1, off=0)"
+  ::= { vsController 1633 }
+
+vsControllerAlarmOutputNetworkSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Output Network Summary (on=1, off=0)"
+  ::= { vsController 1634 }
+
+vsControllerAlarmHdSummary OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "HD Summary (on=1, off=0)"
+  ::= { vsController 1635 }
+
+vsControllerAlarmMutedTransmitterOutput OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Muted Transmitter Output (on=1, off=0)"
+  ::= { vsController 1638 }
+
+vsControllerAlarmInhibitedPaPs OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Inhibited PA PS (on=1, off=0)"
+  ::= { vsController 1639 }
+
+vsControllerAlarmMutedIpaOutput OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Muted IPA Output (on=1, off=0)"
+  ::= { vsController 1640 }
+
+vsControllerAlarmMutedPreampOutput OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Muted Pre-Amp Output (on=1, off=0)"
+  ::= { vsController 1641 }
+
+vsControllerAlarmMutedExciterOutput OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Muted Exciter Output (on=1, off=0)"
+  ::= { vsController 1642 }
+
+vsControllerAlarmPsCurrentFoldback OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PS Current Foldback (on=1, off=0)"
+  ::= { vsController 1652 }
+
+vsControllerAlarmFan6Fail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan 6 Fail (on=1, off=0)"
+  ::= { vsController 1653 }
+
+vsControllerAlarmFan7Fail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan 7 Fail (on=1, off=0)"
+  ::= { vsController 1654 }
+
+vsControllerTransmitterType OBJECT-TYPE
+  SYNTAX VsTransmitterType
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "0 = VS 300, 1 = VS 1K, 2 = VS 2.5K, 3 = VS 3K"
+  ::= { vsController 2317 }
+
+vsControllerActivePresetIndex OBJECT-TYPE
+  SYNTAX INTEGER
+  MAX-ACCESS read-write
+  STATUS current
+  DESCRIPTION
+  "Active preset number (offset by 4096)"
+  ::= { vsController 4159 }
+
+vsControllerIncDecPower OBJECT-TYPE
+  SYNTAX INTEGER
+  MAX-ACCESS read-write
+  STATUS deprecated
+  DESCRIPTION
+  "Deprecated, replaced with vsControllerSetPower."
+  ::= { vsController 4162 }
+
+vsControllerSetPower OBJECT-TYPE
+  SYNTAX INTEGER
+  MAX-ACCESS read-write
+  STATUS current
+  DESCRIPTION
+  "Set Power"
+  ::= { vsController 4167 }
+
+vsControllerMeterCarrierFrequency OBJECT-TYPE
+  SYNTAX INTEGER
+  UNITS "Hz"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Carrier Frequency"
+  ::= { vsController 4169 }
+
+vsActiveExciterMeterForwardPower OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Forward Power"
+  ::= { vsActiveExciter 256 }
+
+vsActiveExciterMeterReflectedPower OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "W"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Reflected Power"
+  ::= { vsActiveExciter 257 }
+
+vsActiveExciterMeterIpaVolts OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA Voltage"
+  ::= { vsActiveExciter 258 }
+
+vsActiveExciterMeterPlus15V OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+15 V"
+  ::= { vsActiveExciter 263 }
+
+vsActiveExciterMeterMinus15V OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "-15 V"
+  ::= { vsActiveExciter 264 }
+
+vsActiveExciterMeter5V OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+5 V"
+  ::= { vsActiveExciter 265 }
+
+vsActiveExciterMeter33V OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+3.3 V"
+  ::= { vsActiveExciter 266 }
+
+vsActiveExciterMeter12V OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+1.2 V"
+  ::= { vsActiveExciter 269 }
+
+vsActiveExciterMeterBatteryPower OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "V"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Battery Voltage"
+  ::= { vsActiveExciter 270 }
+
+vsActiveExciterMeterFanRpm OBJECT-TYPE
+  SYNTAX INTEGER
+  UNITS "rpm"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan Speed"
+  ::= { vsActiveExciter 271 }
+
+vsActiveExciterMeterAudioLeftPeak OBJECT-TYPE
+  SYNTAX Millionths
+  UNITS "dBu"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Analog Left Peak"
+  ::= { vsActiveExciter 274 }
+
+vsActiveExciterMeterAudioRightPeak OBJECT-TYPE
+  SYNTAX Millionths
+  UNITS "dBu"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Analog Right Peak"
+  ::= { vsActiveExciter 275 }
+
+vsActiveExciterMeterAudioMpxPeak OBJECT-TYPE
+  SYNTAX Millionths
+  UNITS "Vpp"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "MPX Peak"
+  ::= { vsActiveExciter 276 }
+
+vsActiveExciterMeterAudioSca1Peak OBJECT-TYPE
+  SYNTAX Millionths
+  UNITS "dBu"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Internal SCA1 Peak"
+  ::= { vsActiveExciter 277 }
+
+vsActiveExciterMeterAudioSca2Peak OBJECT-TYPE
+  SYNTAX Millionths
+  UNITS "dBu"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Internal SCA2 Peak"
+  ::= { vsActiveExciter 278 }
+
+vsActiveExciterMeterAudioDig1LPeak OBJECT-TYPE
+  SYNTAX Millionths
+  UNITS "dBFS"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Digital 1 Left Peak"
+  ::= { vsActiveExciter 279 }
+
+vsActiveExciterMeterAudioDig1RPeak OBJECT-TYPE
+  SYNTAX Millionths
+  UNITS "dBFS"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Digital 1 Right Peak"
+  ::= { vsActiveExciter 280 }
+
+vsActiveExciterMeterAudioDig2LPeak OBJECT-TYPE
+  SYNTAX Millionths
+  UNITS "dBFS"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Digital 2 Left Peak"
+  ::= { vsActiveExciter 281 }
+
+vsActiveExciterMeterAudioDig2RPeak OBJECT-TYPE
+  SYNTAX Millionths
+  UNITS "dBFS"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Digital 2 Right Peak"
+  ::= { vsActiveExciter 282 }
+
+vsActiveExciterMeterAudioMpxScaPeak OBJECT-TYPE
+  SYNTAX Millionths
+  UNITS "Vpp"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "MPX SCA Peak"
+  ::= { vsActiveExciter 283 }
+
+vsActiveExciterMeterDeviationPeak OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "%"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Peak Modulation Level"
+  ::= { vsActiveExciter 291 }
+
+vsActiveExciterMeterMpxRms OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "%"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "MPX RMS Deviation"
+  ::= { vsActiveExciter 293 }
+
+vsActiveExciterMeterAgcGain OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "%"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "AGC Limiter Gain"
+  ::= { vsActiveExciter 298 }
+
+vsActiveExciterMeterMpxPowerGain OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "%"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "MPX Limiter Gain"
+  ::= { vsActiveExciter 299 }
+
+vsActiveExciterMeterFwdPathAtten OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "dB"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Forward Attenuation"
+  ::= { vsActiveExciter 515 }
+
+vsActiveExciterMeterDacGain OBJECT-TYPE
+  SYNTAX Thousandths
+  UNITS "%"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "DAC Gain"
+  ::= { vsActiveExciter 516 }
+
+vsActiveExciterAlarmSwrShutback OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "SWR Shutback (on=1, off=0)"
+  ::= { vsActiveExciter 1538 }
+
+vsActiveExciterAlarmNoHdData OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "No HD Data Link (on=1, off=0)"
+  ::= { vsActiveExciter 1539 }
+
+vsActiveExciterAlarmNoExgine10MHz OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "No Exgine 10 MHz (on=1, off=0)"
+  ::= { vsActiveExciter 1540 }
+
+vsActiveExciterAlarmNoReversePath OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "No Reverse Path (on=1, off=0)"
+  ::= { vsActiveExciter 1541 }
+
+vsActiveExciterAlarmExgineNotBooted OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Exgine Not Booted (on=1, off=0)"
+  ::= { vsActiveExciter 1542 }
+
+vsActiveExciterAlarmFpgaTestFailed OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "FPGA Test Failed (on=1, off=0)"
+  ::= { vsActiveExciter 1543 }
+
+vsActiveExciterAlarmEnteredFirmwareUpgrade OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Entered Firmware Upgrade (on=1, off=0)"
+  ::= { vsActiveExciter 1544 }
+
+vsActiveExciterAlarmUnsignedDspImage OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Unsigned DSP Image (on=1, off=0)"
+  ::= { vsActiveExciter 1545 }
+
+vsActiveExciterAlarmUnsignedFpgaImage OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Unsigned FPGA Image (on=1, off=0)"
+  ::= { vsActiveExciter 1546 }
+
+vsActiveExciterAlarmNeedRebootForSettings OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Reboot for Settings Needed (on=1, off=0)"
+  ::= { vsActiveExciter 1547 }
+
+vsActiveExciterAlarmExgineOffline OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Exgine Offline (on=1, off=0)"
+  ::= { vsActiveExciter 1549 }
+
+vsActiveExciterAlarmDeadAir OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Modulation Loss (on=1, off=0)"
+  ::= { vsActiveExciter 1550 }
+
+vsActiveExciterAlarmPllUnlock OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PLL Unlock (on=1, off=0)"
+  ::= { vsActiveExciter 1551 }
+
+vsActiveExciterAlarmSrc1Unlock OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "SRC1 Unlock (on=1, off=0)"
+  ::= { vsActiveExciter 1552 }
+
+vsActiveExciterAlarmSrc2Unlock OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "SRC2 Unlock (on=1, off=0)"
+  ::= { vsActiveExciter 1553 }
+
+vsActiveExciterAlarmAudioShutDown OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Audio Shutdown (on=1, off=0)"
+  ::= { vsActiveExciter 1554 }
+
+vsActiveExciterAlarmPaOverTemperature OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "High PA Temperature (on=1, off=0)"
+  ::= { vsActiveExciter 1555 }
+
+vsActiveExciterAlarmNo1Pps OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "No 1PPS (on=1, off=0)"
+  ::= { vsActiveExciter 1556 }
+
+vsActiveExciterAlarmPilotUnsync OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Pilot Unsync (on=1, off=0)"
+  ::= { vsActiveExciter 1557 }
+
+vsActiveExciterAlarmFanFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Fan Fail (on=1, off=0)"
+  ::= { vsActiveExciter 1558 }
+
+vsActiveExciterAlarmPlus15VFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+15V Fail (on=1, off=0)"
+  ::= { vsActiveExciter 1559 }
+
+vsActiveExciterAlarmMinus15VFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "-15V Fail (on=1, off=0)"
+  ::= { vsActiveExciter 1560 }
+
+vsActiveExciterAlarm5VFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+5V A Fail (on=1, off=0)"
+  ::= { vsActiveExciter 1561 }
+
+vsActiveExciterAlarm33VFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+3.3V Fail (on=1, off=0)"
+  ::= { vsActiveExciter 1563 }
+
+vsActiveExciterAlarm12VFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "+1.2V Fail (on=1, off=0)"
+  ::= { vsActiveExciter 1565 }
+
+vsActiveExciterAlarmLowBackupBattery OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Low Battery (on=1, off=0)"
+  ::= { vsActiveExciter 1566 }
+
+vsActiveExciterAlarmPaVoltsFail OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA Voltage Fail (on=1, off=0)"
+  ::= { vsActiveExciter 1567 }
+
+vsActiveExciterAlarmAudioAnalogLeftLow OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Analog Left Audio Low (on=1, off=0)"
+  ::= { vsActiveExciter 1569 }
+
+vsActiveExciterAlarmAudioAnalogRightLow OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Analog Right Audio Low (on=1, off=0)"
+  ::= { vsActiveExciter 1570 }
+
+vsActiveExciterAlarmAudioDigital1Low OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "AES Digital 1 Audio Low (on=1, off=0)"
+  ::= { vsActiveExciter 1571 }
+
+vsActiveExciterAlarmAudioDigital2Low OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "AES Digital 2 Audio Low (on=1, off=0)"
+  ::= { vsActiveExciter 1572 }
+
+vsActiveExciterAlarmAudioSca1Low OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "SCA 1 Audio Low (on=1, off=0)"
+  ::= { vsActiveExciter 1573 }
+
+vsActiveExciterAlarmAudioSca2Low OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "SCA 2 Audio Low (on=1, off=0)"
+  ::= { vsActiveExciter 1574 }
+
+vsActiveExciterAlarmAudioCompositeLow OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "MPX Audio Low (on=1, off=0)"
+  ::= { vsActiveExciter 1575 }
+
+vsActiveExciterAlarmMissingExternalPreset OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Missing Preset (on=1, off=0)"
+  ::= { vsActiveExciter 1580 }
+
+vsActiveExciterAlarmNoTransmitterComms OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "No Transmitter Communication (on=1, off=0)"
+  ::= { vsActiveExciter 1581 }
+
+vsActiveExciterAlarmNoActive10MHz OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "No Active 10MHz (on=1, off=0)"
+  ::= { vsActiveExciter 1582 }
+
+vsActiveExciterAlarmExternal10MHz OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "No External 10MHz (on=1, off=0)"
+  ::= { vsActiveExciter 1583 }
+
+vsActiveExciterAlarmZeroedHdData OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Invalid HD Data (on=1, off=0)"
+  ::= { vsActiveExciter 1584 }
+
+vsActiveExciterAlarmHighTxSample OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "High Reverse Path (on=1, off=0)"
+  ::= { vsActiveExciter 1585 }
+
+vsActiveExciterAlarmPaDataCleared OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA Data Cleared (on=1, off=0)"
+  ::= { vsActiveExciter 1591 }
+
+vsActiveExciterAlarmPaNotPresent OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "PA Missing (on=1, off=0)"
+  ::= { vsActiveExciter 1592 }
+
+vsActiveExciterAlarmExgineMisconfigured OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Exgine Misconfigured (on=1, off=0)"
+  ::= { vsActiveExciter 1593 }
+
+vsActiveExciterAlarmAudioProcessorOffline OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Audio Processor Offline (on=1, off=0)"
+  ::= { vsActiveExciter 1594 }
+
+vsActiveExciterAlarmAudioProcessorOutputFault OBJECT-TYPE
+  SYNTAX OnOff
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Audio Processor Output Fail (on=1, off=0)"
+  ::= { vsActiveExciter 1595 }
+
+vsActiveExciterMainAudioLowTripLevel OBJECT-TYPE
+  SYNTAX INTEGER
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Sets level for AUDIO LOW alarms (default: 5% of full scale)"
+  ::= { vsActiveExciter 1794 }
+
+vsActiveExciterUseExternal10mhz OBJECT-TYPE
+  SYNTAX INTEGER
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+  "Use External 10MHz (on=1, off=0). If enabled, ext 10MHz alarm will be active if no ext 10MHz available"
+  ::= { vsActiveExciter 1796 }
+
+--
+-- Trap definitions
+--
+
+vsControllerAlarmTransmitterRfOffTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmTransmitterRfOff }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmTransmitterRfOff changes state"
+  ::= { vsTraps 0 1 }
+
+vsControllerAlarmExternalInterlockTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmExternalInterlock }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmExternalInterlock changes state"
+  ::= { vsTraps 0 2 }
+
+vsControllerAlarmPreampFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPreampFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPreampFail changes state"
+  ::= { vsTraps 0 3 }
+
+vsControllerAlarmIpaFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmIpaFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmIpaFail changes state"
+  ::= { vsTraps 0 4 }
+
+vsControllerAlarmIpaOutputLowTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmIpaOutputLow }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmIpaOutputLow changes state"
+  ::= { vsTraps 0 5 }
+
+vsControllerAlarmIpaOutputHighTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmIpaOutputHigh }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmIpaOutputHigh changes state"
+  ::= { vsTraps 0 6 }
+
+vsControllerAlarmPa1FailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPa1Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPa1Fail changes state"
+  ::= { vsTraps 0 7 }
+
+vsControllerAlarmPa2FailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPa2Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPa2Fail changes state"
+  ::= { vsTraps 0 8 }
+
+vsControllerAlarmPa3FailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPa3Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPa3Fail changes state"
+  ::= { vsTraps 0 9 }
+
+vsControllerAlarmPa4FailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPa4Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPa4Fail changes state"
+  ::= { vsTraps 0 10 }
+
+vsControllerAlarmAllPowerAmplifiersInactiveTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmAllPowerAmplifiersInactive }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmAllPowerAmplifiersInactive changes state"
+  ::= { vsTraps 0 11 }
+
+vsControllerAlarmPaAMissingTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPaAMissing }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPaAMissing changes state"
+  ::= { vsTraps 0 12 }
+
+vsControllerAlarmPsAAcFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPsAAcFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPsAAcFail changes state"
+  ::= { vsTraps 0 13 }
+
+vsControllerAlarmPsAOverTemperatureTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPsAOverTemperature }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPsAOverTemperature changes state"
+  ::= { vsTraps 0 14 }
+
+vsControllerAlarmPsAFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPsAFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPsAFail changes state"
+  ::= { vsTraps 0 15 }
+
+vsControllerAlarmPaBMissingTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPaBMissing }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPaBMissing changes state"
+  ::= { vsTraps 0 16 }
+
+vsControllerAlarmPsBAcFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPsBAcFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPsBAcFail changes state"
+  ::= { vsTraps 0 17 }
+
+vsControllerAlarmPsBOverTemperatureTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPsBOverTemperature }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPsBOverTemperature changes state"
+  ::= { vsTraps 0 18 }
+
+vsControllerAlarmPsBFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPsBFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPsBFail changes state"
+  ::= { vsTraps 0 19 }
+
+vsControllerAlarmPaCMissingTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPaCMissing }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPaCMissing changes state"
+  ::= { vsTraps 0 20 }
+
+vsControllerAlarmPsCAcFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPsCAcFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPsCAcFail changes state"
+  ::= { vsTraps 0 21 }
+
+vsControllerAlarmPsCOverTemperatureTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPsCOverTemperature }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPsCOverTemperature changes state"
+  ::= { vsTraps 0 22 }
+
+vsControllerAlarmPsCFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPsCFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPsCFail changes state"
+  ::= { vsTraps 0 23 }
+
+vsControllerAlarmPaVoltsAFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPaVoltsAFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPaVoltsAFail changes state"
+  ::= { vsTraps 0 24 }
+
+vsControllerAlarmFan1FailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmFan1Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmFan1Fail changes state"
+  ::= { vsTraps 0 25 }
+
+vsControllerAlarmFan2FailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmFan2Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmFan2Fail changes state"
+  ::= { vsTraps 0 26 }
+
+vsControllerAlarmFan3FailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmFan3Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmFan3Fail changes state"
+  ::= { vsTraps 0 27 }
+
+vsControllerAlarmFan4FailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmFan4Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmFan4Fail changes state"
+  ::= { vsTraps 0 28 }
+
+vsControllerAlarmFan5FailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmFan5Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmFan5Fail changes state"
+  ::= { vsTraps 0 29 }
+
+vsControllerAlarmInsufficientFansActiveTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmInsufficientFansActive }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmInsufficientFansActive changes state"
+  ::= { vsTraps 0 30 }
+
+vsControllerAlarmPaOverTemperatureTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPaOverTemperature }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPaOverTemperature changes state"
+  ::= { vsTraps 0 31 }
+
+vsControllerAlarmIntakeOverTemperatureTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmIntakeOverTemperature }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmIntakeOverTemperature changes state"
+  ::= { vsTraps 0 32 }
+
+vsControllerAlarmHighTemperatureLatchTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmHighTemperatureLatch }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmHighTemperatureLatch changes state"
+  ::= { vsTraps 0 33 }
+
+vsControllerAlarmPlus15vFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPlus15vFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPlus15vFail changes state"
+  ::= { vsTraps 0 34 }
+
+vsControllerAlarmMinus15vFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmMinus15vFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmMinus15vFail changes state"
+  ::= { vsTraps 0 35 }
+
+vsControllerAlarm5vFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarm5vFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarm5vFail changes state"
+  ::= { vsTraps 0 36 }
+
+vsControllerAlarm33vFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarm33vFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarm33vFail changes state"
+  ::= { vsTraps 0 37 }
+
+vsControllerAlarm18vFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarm18vFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarm18vFail changes state"
+  ::= { vsTraps 0 38 }
+
+vsControllerAlarm12vFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarm12vFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarm12vFail changes state"
+  ::= { vsTraps 0 39 }
+
+vsControllerAlarmLowBackupBatteryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmLowBackupBattery }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmLowBackupBattery changes state"
+  ::= { vsTraps 0 40 }
+
+vsControllerAlarm48vFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarm48vFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarm48vFail changes state"
+  ::= { vsTraps 0 41 }
+
+vsControllerAlarmSwrShutbackTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmSwrShutback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmSwrShutback changes state"
+  ::= { vsTraps 0 42 }
+
+vsControllerAlarmHighReflectedPowerTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmHighReflectedPower }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmHighReflectedPower changes state"
+  ::= { vsTraps 0 43 }
+
+vsControllerAlarmSwrFoldbackTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmSwrFoldback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmSwrFoldback changes state"
+  ::= { vsTraps 0 44 }
+
+vsControllerAlarmHighSwrShutdownTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmHighSwrShutdown }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmHighSwrShutdown changes state"
+  ::= { vsTraps 0 45 }
+
+vsControllerAlarmCutbackSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmCutbackSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmCutbackSummary changes state"
+  ::= { vsTraps 0 46 }
+
+vsControllerAlarmPerPaFoldbackTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPerPaFoldback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPerPaFoldback changes state"
+  ::= { vsTraps 0 47 }
+
+vsControllerAlarmHighRejectTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmHighReject }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmHighReject changes state"
+  ::= { vsTraps 0 48 }
+
+vsControllerAlarmRejectFoldbackTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmRejectFoldback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmRejectFoldback changes state"
+  ::= { vsTraps 0 49 }
+
+vsControllerAlarmRejectShutbackTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmRejectShutback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmRejectShutback changes state"
+  ::= { vsTraps 0 50 }
+
+vsControllerAlarmHighFwdPowerTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmHighFwdPower }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmHighFwdPower changes state"
+  ::= { vsTraps 0 51 }
+
+vsControllerAlarmFwdPowerLimitingTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmFwdPowerLimiting }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmFwdPowerLimiting changes state"
+  ::= { vsTraps 0 52 }
+
+vsControllerAlarmFwdPowerShutdownTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmFwdPowerShutdown }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmFwdPowerShutdown changes state"
+  ::= { vsTraps 0 53 }
+
+vsControllerAlarmDeadPaFoldbackTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmDeadPaFoldback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmDeadPaFoldback changes state"
+  ::= { vsTraps 0 54 }
+
+vsControllerAlarmFwdPowerLowTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmFwdPowerLow }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmFwdPowerLow changes state"
+  ::= { vsTraps 0 55 }
+
+vsControllerAlarmFwdPowerLowLowTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmFwdPowerLowLow }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmFwdPowerLowLow changes state"
+  ::= { vsTraps 0 56 }
+
+vsControllerAlarmResidualPaVoltsPresentTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmResidualPaVoltsPresent }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmResidualPaVoltsPresent changes state"
+  ::= { vsTraps 0 57 }
+
+vsControllerAlarmDischargingPaVoltsTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmDischargingPaVolts }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmDischargingPaVolts changes state"
+  ::= { vsTraps 0 58 }
+
+vsControllerAlarmRunningBiasRoutineTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmRunningBiasRoutine }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmRunningBiasRoutine changes state"
+  ::= { vsTraps 0 59 }
+
+vsControllerAlarmSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmSummary changes state"
+  ::= { vsTraps 0 60 }
+
+vsControllerAlarmAcSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmAcSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmAcSummary changes state"
+  ::= { vsTraps 0 61 }
+
+vsControllerAlarmExternalSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmExternalSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmExternalSummary changes state"
+  ::= { vsTraps 0 62 }
+
+vsControllerAlarmAudioLossSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmAudioLossSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmAudioLossSummary changes state"
+  ::= { vsTraps 0 63 }
+
+vsControllerAlarmLowBatteryMemorySummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmLowBatteryMemorySummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmLowBatteryMemorySummary changes state"
+  ::= { vsTraps 0 64 }
+
+vsControllerAlarmOffAirCriticalSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmOffAirCriticalSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmOffAirCriticalSummary changes state"
+  ::= { vsTraps 0 65 }
+
+vsControllerAlarmReducedPowerSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmReducedPowerSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmReducedPowerSummary changes state"
+  ::= { vsTraps 0 66 }
+
+vsControllerAlarmMaintenanceRequiredSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmMaintenanceRequiredSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmMaintenanceRequiredSummary changes state"
+  ::= { vsTraps 0 67 }
+
+vsControllerAlarmHighTemperatureSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmHighTemperatureSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmHighTemperatureSummary changes state"
+  ::= { vsTraps 0 68 }
+
+vsControllerAlarmHighReflectedSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmHighReflectedSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmHighReflectedSummary changes state"
+  ::= { vsTraps 0 69 }
+
+vsControllerAlarmPsSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPsSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPsSummary changes state"
+  ::= { vsTraps 0 70 }
+
+vsControllerAlarmPaSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPaSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPaSummary changes state"
+  ::= { vsTraps 0 71 }
+
+vsControllerAlarmExciterSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmExciterSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmExciterSummary changes state"
+  ::= { vsTraps 0 72 }
+
+vsControllerAlarmOutputNetworkSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmOutputNetworkSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmOutputNetworkSummary changes state"
+  ::= { vsTraps 0 73 }
+
+vsControllerAlarmHdSummaryTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmHdSummary }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmHdSummary changes state"
+  ::= { vsTraps 0 74 }
+
+vsControllerAlarmMutedTransmitterOutputTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmMutedTransmitterOutput }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmMutedTransmitterOutput changes state"
+  ::= { vsTraps 0 75 }
+
+vsControllerAlarmInhibitedPaPsTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmInhibitedPaPs }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmInhibitedPaPs changes state"
+  ::= { vsTraps 0 76 }
+
+vsControllerAlarmMutedIpaOutputTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmMutedIpaOutput }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmMutedIpaOutput changes state"
+  ::= { vsTraps 0 77 }
+
+vsControllerAlarmMutedPreampOutputTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmMutedPreampOutput }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmMutedPreampOutput changes state"
+  ::= { vsTraps 0 78 }
+
+vsControllerAlarmMutedExciterOutputTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmMutedExciterOutput }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmMutedExciterOutput changes state"
+  ::= { vsTraps 0 79 }
+
+vsControllerAlarmPsCurrentFoldbackTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmPsCurrentFoldback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmPsCurrentFoldback changes state"
+  ::= { vsTraps 0 80 }
+
+vsControllerAlarmFan6FailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmFan6Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmFan6Fail changes state"
+  ::= { vsTraps 0 81 }
+
+vsControllerAlarmFan7FailTrap NOTIFICATION-TYPE
+    OBJECTS { vsControllerAlarmFan7Fail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsControllerAlarmFan7Fail changes state"
+  ::= { vsTraps 0 82 }
+
+vsActiveExciterAlarmSwrShutbackTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmSwrShutback }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmSwrShutback changes state"
+  ::= { vsTraps 0 83 }
+
+vsActiveExciterAlarmNoHdDataTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmNoHdData }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmNoHdData changes state"
+  ::= { vsTraps 0 84 }
+
+vsActiveExciterAlarmNoExgine10MHzTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmNoExgine10MHz }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmNoExgine10MHz changes state"
+  ::= { vsTraps 0 85 }
+
+vsActiveExciterAlarmNoReversePathTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmNoReversePath }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmNoReversePath changes state"
+  ::= { vsTraps 0 86 }
+
+vsActiveExciterAlarmExgineNotBootedTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmExgineNotBooted }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmExgineNotBooted changes state"
+  ::= { vsTraps 0 87 }
+
+vsActiveExciterAlarmFpgaTestFailedTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmFpgaTestFailed }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmFpgaTestFailed changes state"
+  ::= { vsTraps 0 88 }
+
+vsActiveExciterAlarmEnteredFirmwareUpgradeTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmEnteredFirmwareUpgrade }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmEnteredFirmwareUpgrade changes state"
+  ::= { vsTraps 0 89 }
+
+vsActiveExciterAlarmUnsignedDspImageTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmUnsignedDspImage }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmUnsignedDspImage changes state"
+  ::= { vsTraps 0 90 }
+
+vsActiveExciterAlarmUnsignedFpgaImageTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmUnsignedFpgaImage }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmUnsignedFpgaImage changes state"
+  ::= { vsTraps 0 91 }
+
+vsActiveExciterAlarmNeedRebootForSettingsTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmNeedRebootForSettings }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmNeedRebootForSettings changes state"
+  ::= { vsTraps 0 92 }
+
+vsActiveExciterAlarmExgineOfflineTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmExgineOffline }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmExgineOffline changes state"
+  ::= { vsTraps 0 93 }
+
+vsActiveExciterAlarmDeadAirTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmDeadAir }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmDeadAir changes state"
+  ::= { vsTraps 0 94 }
+
+vsActiveExciterAlarmPllUnlockTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmPllUnlock }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmPllUnlock changes state"
+  ::= { vsTraps 0 95 }
+
+vsActiveExciterAlarmSrc1UnlockTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmSrc1Unlock }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmSrc1Unlock changes state"
+  ::= { vsTraps 0 96 }
+
+vsActiveExciterAlarmSrc2UnlockTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmSrc2Unlock }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmSrc2Unlock changes state"
+  ::= { vsTraps 0 97 }
+
+vsActiveExciterAlarmAudioShutDownTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmAudioShutDown }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmAudioShutDown changes state"
+  ::= { vsTraps 0 98 }
+
+vsActiveExciterAlarmPaOverTemperatureTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmPaOverTemperature }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmPaOverTemperature changes state"
+  ::= { vsTraps 0 99 }
+
+vsActiveExciterAlarmNo1PpsTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmNo1Pps }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmNo1Pps changes state"
+  ::= { vsTraps 0 100 }
+
+vsActiveExciterAlarmPilotUnsyncTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmPilotUnsync }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmPilotUnsync changes state"
+  ::= { vsTraps 0 101 }
+
+vsActiveExciterAlarmFanFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmFanFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmFanFail changes state"
+  ::= { vsTraps 0 102 }
+
+vsActiveExciterAlarmPlus15VFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmPlus15VFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmPlus15VFail changes state"
+  ::= { vsTraps 0 103 }
+
+vsActiveExciterAlarmMinus15VFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmMinus15VFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmMinus15VFail changes state"
+  ::= { vsTraps 0 104 }
+
+vsActiveExciterAlarm5VFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarm5VFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarm5VFail changes state"
+  ::= { vsTraps 0 105 }
+
+vsActiveExciterAlarm33VFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarm33VFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarm33VFail changes state"
+  ::= { vsTraps 0 106 }
+
+vsActiveExciterAlarm12VFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarm12VFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarm12VFail changes state"
+  ::= { vsTraps 0 107 }
+
+vsActiveExciterAlarmLowBackupBatteryTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmLowBackupBattery }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmLowBackupBattery changes state"
+  ::= { vsTraps 0 108 }
+
+vsActiveExciterAlarmPaVoltsFailTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmPaVoltsFail }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmPaVoltsFail changes state"
+  ::= { vsTraps 0 109 }
+
+vsActiveExciterAlarmAudioAnalogLeftLowTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmAudioAnalogLeftLow }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmAudioAnalogLeftLow changes state"
+  ::= { vsTraps 0 110 }
+
+vsActiveExciterAlarmAudioAnalogRightLowTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmAudioAnalogRightLow }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmAudioAnalogRightLow changes state"
+  ::= { vsTraps 0 111 }
+
+vsActiveExciterAlarmAudioDigital1LowTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmAudioDigital1Low }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmAudioDigital1Low changes state"
+  ::= { vsTraps 0 112 }
+
+vsActiveExciterAlarmAudioDigital2LowTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmAudioDigital2Low }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmAudioDigital2Low changes state"
+  ::= { vsTraps 0 113 }
+
+vsActiveExciterAlarmAudioSca1LowTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmAudioSca1Low }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmAudioSca1Low changes state"
+  ::= { vsTraps 0 114 }
+
+vsActiveExciterAlarmAudioSca2LowTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmAudioSca2Low }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmAudioSca2Low changes state"
+  ::= { vsTraps 0 115 }
+
+vsActiveExciterAlarmAudioCompositeLowTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmAudioCompositeLow }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmAudioCompositeLow changes state"
+  ::= { vsTraps 0 116 }
+
+vsActiveExciterAlarmMissingExternalPresetTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmMissingExternalPreset }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmMissingExternalPreset changes state"
+  ::= { vsTraps 0 117 }
+
+vsActiveExciterAlarmNoTransmitterCommsTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmNoTransmitterComms }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmNoTransmitterComms changes state"
+  ::= { vsTraps 0 118 }
+
+vsActiveExciterAlarmNoActive10MHzTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmNoActive10MHz }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmNoActive10MHz changes state"
+  ::= { vsTraps 0 119 }
+
+vsActiveExciterAlarmExternal10MHzTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmExternal10MHz }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmExternal10MHz changes state"
+  ::= { vsTraps 0 120 }
+
+vsActiveExciterAlarmZeroedHdDataTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmZeroedHdData }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmZeroedHdData changes state"
+  ::= { vsTraps 0 121 }
+
+vsActiveExciterAlarmHighTxSampleTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmHighTxSample }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmHighTxSample changes state"
+  ::= { vsTraps 0 122 }
+
+vsActiveExciterAlarmPaDataClearedTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmPaDataCleared }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmPaDataCleared changes state"
+  ::= { vsTraps 0 123 }
+
+vsActiveExciterAlarmPaNotPresentTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmPaNotPresent }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmPaNotPresent changes state"
+  ::= { vsTraps 0 124 }
+
+vsActiveExciterAlarmExgineMisconfiguredTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmExgineMisconfigured }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmExgineMisconfigured changes state"
+  ::= { vsTraps 0 125 }
+
+vsActiveExciterAlarmAudioProcessorOfflineTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmAudioProcessorOffline }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmAudioProcessorOffline changes state"
+  ::= { vsTraps 0 126 }
+
+vsActiveExciterAlarmAudioProcessorOutputFaultTrap NOTIFICATION-TYPE
+    OBJECTS { vsActiveExciterAlarmAudioProcessorOutputFault }
+    STATUS current
+    DESCRIPTION
+        "Sent when vsActiveExciterAlarmAudioProcessorOutputFault changes state"
+  ::= { vsTraps 0 127 }
+
+END
