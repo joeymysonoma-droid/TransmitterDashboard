@@ -3,13 +3,27 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from .alerts import AlertEngine
-from .config import load_config
+from .config import (
+    config_to_dict,
+    load_config,
+    merge_secrets,
+    save_config,
+    validate_config_dict,
+)
+from .controls import (
+    ControlError,
+    controls_status,
+    send_control,
+    supported_actions_for,
+    tx_controls_enabled,
+)
 from .history import HistoryStore
 from .paths import data_dir, resolve_config_path, static_dir
 from .poller import FleetPoller
@@ -28,7 +42,7 @@ def create_app(config_path: str | Path | None = None) -> FastAPI:
     alerts = AlertEngine(config.alerts, data / "alert_state.json")
     poller = FleetPoller(config, history, alerts=alerts)
 
-    app = FastAPI(title="ASMG TX Dashboard", version="1.3.0")
+    app = FastAPI(title="ASMG TX Dashboard", version="1.5.0")
     app.state.poller = poller
     app.state.history = history
     app.state.alerts = alerts
@@ -47,9 +61,11 @@ def create_app(config_path: str | Path | None = None) -> FastAPI:
     def health() -> dict:
         return {
             "ok": True,
-            "transmitters": len(config.transmitters),
-            "poll_interval_seconds": config.poll_interval_seconds,
+            "version": "1.5.0",
+            "transmitters": len(poller.config.transmitters),
+            "poll_interval_seconds": poller.config.poll_interval_seconds,
             "alerts": alerts.status(),
+            "controls": controls_status(poller.config),
         }
 
     @app.get("/api/transmitters")
@@ -124,6 +140,48 @@ def create_app(config_path: str | Path | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="Transmitter not found")
         return reading.to_dict()
 
+    @app.get("/api/controls/status")
+    def get_controls_status() -> dict:
+        return controls_status(poller.config)
+
+    @app.post("/api/transmitters/{tx_id}/control")
+    async def control_transmitter(tx_id: str, request: Request) -> dict:
+        body = await _json_body(request)
+        action = str(body.get("action") or "").strip().lower()
+        password = str(body.get("password") or "")
+        tx = next((t for t in poller.config.transmitters if t.id == tx_id), None)
+        if tx is None:
+            raise HTTPException(status_code=404, detail="Transmitter not found")
+        if not tx_controls_enabled(poller.config, tx):
+            raise HTTPException(
+                status_code=403,
+                detail="RF controls are disabled. Enable controls in Settings first.",
+            )
+        reading = poller.get_one(tx_id)
+        try:
+            message = send_control(
+                poller.config,
+                tx,
+                action,
+                password=password,
+                reading=reading,
+            )
+        except ControlError as error:
+            status = 401 if "password" in str(error).lower() else 400
+            if "disabled" in str(error).lower():
+                status = 403
+            raise HTTPException(status_code=status, detail=str(error)) from error
+
+        refreshed = poller.poll_and_store(tx_id)
+        return {
+            "ok": True,
+            "message": message,
+            "action": action,
+            "tx_id": tx_id,
+            "supported_actions": supported_actions_for(tx),
+            "reading": refreshed.to_dict() if refreshed else None,
+        }
+
     @app.get("/api/alerts")
     def get_alerts() -> dict:
         return alerts.status()
@@ -137,6 +195,58 @@ def create_app(config_path: str | Path | None = None) -> FastAPI:
             raise HTTPException(status_code=400, detail=str(error)) from error
         return {"ok": True, "alerts": alerts.status()}
 
+    @app.post("/api/alerts/ack")
+    async def ack_alert(request: Request) -> dict:
+        body = await _json_body(request)
+        key = str(body.get("key") or "").strip()
+        if not key:
+            raise HTTPException(status_code=400, detail="Missing alert key")
+        try:
+            return {"ok": True, "alerts": alerts.acknowledge(key)}
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+
+    @app.post("/api/alerts/snooze")
+    async def snooze_alert(request: Request) -> dict:
+        body = await _json_body(request)
+        key = str(body.get("key") or "").strip()
+        if not key:
+            raise HTTPException(status_code=400, detail="Missing alert key")
+        minutes = int(body.get("minutes") or 60)
+        minutes = max(1, min(minutes, 24 * 60))
+        try:
+            return {"ok": True, "alerts": alerts.snooze(key, minutes=minutes)}
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+
+    @app.get("/api/config")
+    def get_config() -> dict:
+        return config_to_dict(poller.config, mask_secrets=True)
+
+    @app.put("/api/config")
+    async def put_config(request: Request) -> dict:
+        body = await _json_body(request)
+        try:
+            incoming = validate_config_dict(body)
+            merged = merge_secrets(incoming, poller.config)
+        except (ValueError, TypeError, KeyError) as error:
+            raise HTTPException(status_code=400, detail=str(error)) from error
+
+        try:
+            save_config(app.state.config_path, merged)
+        except OSError as error:
+            raise HTTPException(
+                status_code=500, detail=f"Could not write config: {error}"
+            ) from error
+
+        poller.reload_config(merged)
+        app.state.config = merged
+        return {
+            "ok": True,
+            "config": config_to_dict(merged, mask_secrets=True),
+            "summary": _summary(poller.get_all()),
+        }
+
     @app.get("/api/history/stats")
     def history_stats() -> dict:
         return history.stats()
@@ -144,6 +254,14 @@ def create_app(config_path: str | Path | None = None) -> FastAPI:
     @app.get("/")
     def index() -> FileResponse:
         return FileResponse(static / "index.html")
+
+    @app.get("/wall")
+    def wall_page() -> FileResponse:
+        return FileResponse(static / "wall.html")
+
+    @app.get("/settings")
+    def settings_page() -> FileResponse:
+        return FileResponse(static / "settings.html")
 
     @app.get("/tx/{tx_id}")
     def detail_page(tx_id: str) -> FileResponse:
@@ -153,6 +271,16 @@ def create_app(config_path: str | Path | None = None) -> FastAPI:
 
     app.mount("/static", StaticFiles(directory=str(static)), name="static")
     return app
+
+
+async def _json_body(request: Request) -> dict[str, Any]:
+    try:
+        body = await request.json()
+    except Exception as error:
+        raise HTTPException(status_code=400, detail="Invalid JSON body") from error
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="JSON object required")
+    return body
 
 
 def _summary(readings: list) -> dict:

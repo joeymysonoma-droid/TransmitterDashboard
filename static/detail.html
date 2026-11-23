@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Transmitter Detail — ASMG TX Dashboard</title>
-  <link rel="stylesheet" href="/static/styles.css?v=4">
+  <link rel="stylesheet" href="/static/styles.css?v=8">
 </head>
 <body data-page="detail">
   <div class="container">
@@ -21,6 +21,16 @@
         <button id="refresh-btn" class="primary" type="button">Poll now</button>
       </div>
     </header>
+
+    <section id="rf-controls" class="panel rf-controls" hidden>
+      <h2>RF control</h2>
+      <p class="sub" id="rf-controls-note">Controls are gated. Confirm carefully — this affects on-air RF.</p>
+      <div class="actions">
+        <button id="rf-on-btn" type="button" class="primary" disabled>RF On</button>
+        <button id="rf-off-btn" type="button" class="danger" disabled>RF Off</button>
+      </div>
+      <p id="rf-controls-status" class="sub"></p>
+    </section>
 
     <p id="tx-error" class="error-text" hidden></p>
 
@@ -44,43 +54,10 @@
           <button type="button" data-range="30d">30d</button>
         </div>
 
-        <div class="chart-grid">
-          <div class="chart-wrap">
-            <p class="sub" style="margin-bottom:0.35rem">Forward power</p>
-            <canvas id="chart-fwd" height="180"></canvas>
-          </div>
-          <div class="chart-wrap">
-            <p class="sub" style="margin-bottom:0.35rem">Reflected power</p>
-            <canvas id="chart-rfl" height="180"></canvas>
-          </div>
-          <div class="chart-wrap">
-            <p class="sub" style="margin-bottom:0.35rem">VSWR</p>
-            <canvas id="chart-vswr" height="180"></canvas>
-          </div>
-          <div class="chart-wrap">
-            <p class="sub" style="margin-bottom:0.35rem">Heatsink temperature</p>
-            <canvas id="chart-temp" height="180"></canvas>
-          </div>
-          <div class="chart-wrap">
-            <p class="sub" style="margin-bottom:0.35rem">PA volts</p>
-            <canvas id="chart-pa-v" height="180"></canvas>
-          </div>
-          <div class="chart-wrap">
-            <p class="sub" style="margin-bottom:0.35rem">PA 1 current</p>
-            <canvas id="chart-pa-i" height="180"></canvas>
-          </div>
-          <div class="chart-wrap">
-            <p class="sub" style="margin-bottom:0.35rem">+48V (LVPS)</p>
-            <canvas id="chart-48v" height="180"></canvas>
-          </div>
-          <div class="chart-wrap">
-            <p class="sub" style="margin-bottom:0.35rem">Fan 1 RPM</p>
-            <canvas id="chart-fan" height="180"></canvas>
-          </div>
-        </div>
+        <div id="chart-grid" class="chart-grid"></div>
       </section>
     </div>
   </div>
-  <script src="/static/app.js?v=5"></script>
+  <script src="/static/app.js?v=8"></script>
 </body>
 </html>

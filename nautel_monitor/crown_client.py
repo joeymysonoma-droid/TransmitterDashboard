@@ -150,6 +150,114 @@ def fetch_values(
             raise CrownError(f"WebSocket poll failed: {first}; TLS retry: {second}") from second
 
 
+async def _set_opmode_async(
+    host: str,
+    username: str,
+    password: str,
+    opmode: int,
+    use_tls: bool = False,
+    timeout: float = 8.0,
+) -> str:
+    try:
+        import websockets
+    except ImportError as error:
+        raise CrownError("websockets package is required for Crown control") from error
+
+    scheme = "wss" if use_tls else "ws"
+    url = f"{scheme}://{host}/wscom"
+    ssl_ctx = None
+    if use_tls:
+        import ssl as ssl_mod
+
+        ssl_ctx = ssl_mod._create_unverified_context()
+
+    path = "sys.applications.fmngip.tx.opmode"
+    async with websockets.connect(
+        url,
+        ssl=ssl_ctx,
+        open_timeout=timeout,
+        close_timeout=2,
+        max_size=5_000_000,
+        additional_headers=[("Origin", f"http://{host}")],
+    ) as ws:
+        await ws.send(
+            json.dumps({"login@auth": {"login": username, "pass": password}}) + "\n"
+        )
+        auth = await asyncio.wait_for(ws.recv(), timeout=timeout)
+        auth_obj = json.loads(auth)
+        login = auth_obj.get("login@auth") or {}
+        if not login.get("retVal"):
+            raise CrownError(f"Login failed: {auth_obj}")
+
+        # Experimental setValues shapes from GWT config.setValues scrape.
+        attempts = [
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "config.setValues",
+                "params": [{path: opmode}],
+            },
+            {
+                "jsonrpc": "2.0",
+                "id": 3,
+                "method": "config.setValues",
+                "params": [[path, opmode]],
+            },
+            {
+                "jsonrpc": "2.0",
+                "id": 4,
+                "method": "config.setValues",
+                "params": [{"paths": [path], "values": [opmode]}],
+            },
+        ]
+        last_error = "no response"
+        for payload in attempts:
+            req = {"jsonrpc@jsonrpc": payload}
+            await ws.send(json.dumps(req) + "\n")
+            raw = await asyncio.wait_for(ws.recv(), timeout=timeout)
+            body = json.loads(raw).get("jsonrpc@jsonrpc") or {}
+            if "error" in body:
+                last_error = str(body["error"])
+                continue
+            if "result" in body or body.get("id") in (2, 3, 4):
+                return (
+                    f"Crown opmode set to {opmode} via config.setValues. "
+                    "Experimental — confirm on the transmitter GUI."
+                )
+            last_error = str(body)
+        raise CrownError(
+            f"Crown config.setValues rejected (needs live validation): {last_error}"
+        )
+
+
+def set_crown_rf(
+    tx: TransmitterConfig, *, on: bool, timeout: float = 8.0
+) -> str:
+    """Experimental Crown RF control via /wscom config.setValues on tx.opmode."""
+    user = tx.http_username or DEFAULT_USER
+    password = tx.http_password or DEFAULT_PASS
+    opmode = 1 if on else 0
+    try:
+        return asyncio.run(
+            _set_opmode_async(
+                tx.host, user, password, opmode, use_tls=False, timeout=timeout
+            )
+        )
+    except CrownError:
+        raise
+    except Exception as first:
+        try:
+            return asyncio.run(
+                _set_opmode_async(
+                    tx.host, user, password, opmode, use_tls=True, timeout=timeout
+                )
+            )
+        except Exception as second:
+            raise CrownError(
+                f"Crown RF control failed: {first}; TLS retry: {second}"
+            ) from second
+
+
 def poll_crown(tx: TransmitterConfig, timeout: float = 8.0) -> TransmitterReading:
     user = tx.http_username or DEFAULT_USER
     password = tx.http_password or DEFAULT_PASS

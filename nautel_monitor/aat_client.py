@@ -2,11 +2,16 @@
 
 OID map from aat_FM_Tx_1_1.mib (enterprise 51550), matching AAT_Monitor.
 VSWR is reported in hundredths; power/temps are already engineering units.
+RF on/off uses the web controller (same as AAT_Monitor), not SNMP SET.
 """
 
 from __future__ import annotations
 
 import logging
+import urllib.error
+import urllib.parse
+import urllib.request
+from http.cookiejar import CookieJar
 
 from .models import AlarmState, MeterReading, TransmitterConfig, TransmitterReading, utc_now
 from .snmp_client import SnmpError, snmp_get
@@ -151,3 +156,70 @@ def _as_float(value: float | int | None) -> float | None:
     if value is None:
         return None
     return float(value)
+
+
+class AatControlError(RuntimeError):
+    pass
+
+
+def set_aat_rf(tx: TransmitterConfig, *, on: bool, timeout: float = 15.0) -> str:
+    """Login to AAT web UI and POST rfControl on/off."""
+    username = (tx.http_username or "admin").strip()
+    password = tx.http_password or ""
+    if not password:
+        raise AatControlError(
+            "AAT RF control needs http_username/http_password in transmitter config"
+        )
+    base = f"http://{tx.host}"
+    if tx.http_port and tx.http_port != 80:
+        base = f"http://{tx.host}:{tx.http_port}"
+
+    jar = CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
+    login_body = urllib.parse.urlencode(
+        {
+            "login": "true",
+            "username": username,
+            "password": password,
+        }
+    ).encode("utf-8")
+    try:
+        login_req = urllib.request.Request(
+            f"{base}/cgi-bin/controller.py",
+            data=login_body,
+            method="POST",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        with opener.open(login_req, timeout=timeout) as resp:
+            if resp.status == 401:
+                raise AatControlError("AAT web login failed: invalid credentials")
+            resp.read()
+    except urllib.error.HTTPError as error:
+        if error.code == 401:
+            raise AatControlError("AAT web login failed: invalid credentials") from error
+        raise AatControlError(f"AAT login HTTP {error.code}") from error
+    except urllib.error.URLError as error:
+        raise AatControlError(f"AAT unreachable: {error.reason}") from error
+
+    action = "on" if on else "off"
+    cmd_body = urllib.parse.urlencode({"rfControl": action}).encode("utf-8")
+    try:
+        cmd_req = urllib.request.Request(
+            f"{base}/includes/3K_FM_Controller.php",
+            data=cmd_body,
+            method="POST",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        with opener.open(cmd_req, timeout=timeout) as resp:
+            text = resp.read().decode("utf-8", errors="replace").strip()
+    except urllib.error.HTTPError as error:
+        raise AatControlError(f"AAT control HTTP {error.code}") from error
+    except urllib.error.URLError as error:
+        raise AatControlError(f"AAT control failed: {error.reason}") from error
+
+    lowered = text.lower()
+    if lowered.startswith("<!doctype") or lowered.startswith("<html"):
+        raise AatControlError(
+            "AAT web interface did not accept the RF control command"
+        )
+    return text or f"AAT RF {action} command sent"

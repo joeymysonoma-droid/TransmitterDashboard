@@ -46,6 +46,10 @@ class TransmitterConfig:
     # Optional per-TX alert overrides. Present keys replace global alerts.*;
     # explicit null disables a threshold for this TX only.
     alert_overrides: dict[str, Any] = field(default_factory=dict)
+    # Per-TX RF control overrides (None = inherit global).
+    controls_enabled: bool | None = None
+    controls_password: str = ""
+    snmp_write_community: str = ""
 
     @property
     def configured(self) -> bool:
@@ -62,6 +66,10 @@ class TransmitterConfig:
     @property
     def is_crown(self) -> bool:
         return is_crown_model(self.model)
+
+    @property
+    def write_community(self) -> str:
+        return (self.snmp_write_community or self.snmp_community or "public").strip()
 
 
 @dataclass
@@ -88,6 +96,14 @@ class AlertConfig:
 
 
 @dataclass
+class ControlsConfig:
+    """RF control gating. Default off — enable explicitly before use."""
+
+    enabled: bool = False
+    password: str = ""
+
+
+@dataclass
 class AppConfig:
     transmitters: list[TransmitterConfig]
     poll_interval_seconds: int = 30
@@ -98,6 +114,7 @@ class AppConfig:
     snmp_timeout_seconds: float = 5.0
     snmp_retries: int = 2
     alerts: AlertConfig = field(default_factory=AlertConfig)
+    controls: ControlsConfig = field(default_factory=ControlsConfig)
 
 
 @dataclass

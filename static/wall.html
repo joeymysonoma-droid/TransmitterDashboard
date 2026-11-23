@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ASMG TX Wall — TOC</title>
+  <link rel="stylesheet" href="/static/styles.css?v=8">
+</head>
+<body data-page="wall" class="wall">
+  <div class="wall-shell">
+    <header class="wall-header">
+      <div>
+        <h1>ASMG TX Fleet</h1>
+        <p class="sub" id="wall-clock"></p>
+      </div>
+      <div class="actions">
+        <span id="updated" class="sub"></span>
+        <a class="btn" href="/">Exit wall</a>
+      </div>
+    </header>
+
+    <section id="alert-banner" class="alert-banner wall-alerts" aria-live="polite">
+      <div class="alert-banner-top">
+        <h2>Active alerts</h2>
+        <div class="alert-banner-actions"></div>
+      </div>
+      <ul id="alert-list"></ul>
+    </section>
+
+    <section id="summary" class="summary wall-summary" aria-label="Fleet summary"></section>
+    <section id="fleet" class="grid wall-grid" aria-label="Transmitters"></section>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <div class="title" id="toast-title"></div>
+    <div class="body" id="toast-body"></div>
+  </div>
+  <script src="/static/app.js?v=8"></script>
+</body>
+</html>

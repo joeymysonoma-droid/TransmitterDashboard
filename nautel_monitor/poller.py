@@ -58,11 +58,24 @@ class FleetPoller:
         if self._thread:
             self._thread.join(timeout=10)
 
+    def reload_config(self, new_config: AppConfig) -> None:
+        keep_ids = {tx.id for tx in new_config.transmitters}
+        with self._lock:
+            self.config = new_config
+            stale = [tx_id for tx_id in self._latest if tx_id not in keep_ids]
+            for tx_id in stale:
+                self._latest.pop(tx_id, None)
+        if self.alerts is not None:
+            self.alerts.config = new_config.alerts
+        self.history.retention_days = new_config.history_retention_days
+        self.history.min_interval = new_config.history_min_interval_seconds
+
     def get_all(self) -> list[TransmitterReading]:
         with self._lock:
             by_id = {r.tx_id: r for r in self._latest.values()}
+            transmitters = list(self.config.transmitters)
         results: list[TransmitterReading] = []
-        for tx in self.config.transmitters:
+        for tx in transmitters:
             if tx.id in by_id:
                 results.append(by_id[tx.id])
             else:
@@ -73,13 +86,15 @@ class FleetPoller:
         with self._lock:
             if tx_id in self._latest:
                 return self._latest[tx_id]
-        for tx in self.config.transmitters:
+            transmitters = list(self.config.transmitters)
+        for tx in transmitters:
             if tx.id == tx_id:
                 return self._placeholder(tx)
         return None
 
     def poll_all(self) -> list[TransmitterReading]:
-        readings = [self.poll_one(tx) for tx in self.config.transmitters]
+        transmitters = list(self.config.transmitters)
+        readings = [self.poll_one(tx) for tx in transmitters]
         with self._lock:
             for reading in readings:
                 self._latest[reading.tx_id] = reading
@@ -294,7 +309,8 @@ class FleetPoller:
             except Exception:
                 logger.exception("Poll cycle failed")
             elapsed = time.monotonic() - started
-            wait = max(1.0, self.config.poll_interval_seconds - elapsed)
+            interval = self.config.poll_interval_seconds
+            wait = max(1.0, interval - elapsed)
             self._stop.wait(wait)
 
     @staticmethod

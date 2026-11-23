@@ -34,6 +34,13 @@ alerts:
   forward_min_w: null          # prefer per-TX values below
   skip_unconfigured: true      # ignore blank VX hosts
 
+# RF controls: default OFF. Enable only when ready; password required.
+# Flexiva/Crown writes are experimental — do not test live until authorized.
+# Nautel needs REMOTE mode + optional snmp_write_community per TX.
+controls:
+  enabled: false
+  password: ""
+
 transmitters:
   - id: vs300-1
     name: "KZST Exciter"

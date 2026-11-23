@@ -71,6 +71,8 @@ class AlertEngine:
         self.async_send = async_send
         self._lock = threading.Lock()
         self._active: dict[str, str] = {}
+        self._acked: set[str] = set()
+        self._snoozed_until: dict[str, str] = {}
         self._last_sent: dict[str, str] = {}
         self._unreachable_streak: dict[str, int] = {}
         self._last_error = ""
@@ -80,21 +82,78 @@ class AlertEngine:
 
     def status(self) -> dict[str, object]:
         ready, reason = email_ready(self.config)
+        now = datetime.now(timezone.utc)
         with self._lock:
-            active = [
-                {"key": key, "message": message}
-                for key, message in sorted(self._active.items())
-            ]
+            self._prune_snoozes_locked(now)
+            active = []
+            for key, message in sorted(self._active.items()):
+                snooze_until = self._snoozed_until.get(key)
+                snoozed = bool(snooze_until and _parse_time(snooze_until) and _parse_time(snooze_until) > now)
+                acked = key in self._acked
+                if acked or snoozed:
+                    continue
+                active.append(
+                    {
+                        "key": key,
+                        "message": message,
+                        "acked": False,
+                        "snoozed": False,
+                        "snoozed_until": None,
+                    }
+                )
+            hidden = []
+            for key, message in sorted(self._active.items()):
+                snooze_until = self._snoozed_until.get(key)
+                snooze_dt = _parse_time(snooze_until)
+                snoozed = bool(snooze_dt and snooze_dt > now)
+                acked = key in self._acked
+                if not (acked or snoozed):
+                    continue
+                hidden.append(
+                    {
+                        "key": key,
+                        "message": message,
+                        "acked": acked,
+                        "snoozed": snoozed,
+                        "snoozed_until": snooze_until if snoozed else None,
+                    }
+                )
             return {
                 "email_enabled": self.config.email_enabled,
                 "email_ready": ready,
                 "email_reason": "" if ready else reason,
                 "active": active,
                 "active_count": len(active),
+                "suppressed": hidden,
+                "acked": sorted(self._acked),
+                "snoozed_until": dict(self._snoozed_until),
                 "last_error": self._last_error,
                 "last_sent_at": self._last_sent_at,
                 "recent_events": list(self._recent_events[-20:]),
             }
+
+    def acknowledge(self, key: str) -> dict[str, object]:
+        with self._lock:
+            if key not in self._active:
+                raise KeyError(f"Alert not active: {key}")
+            self._acked.add(key)
+            self._push_event_locked("acked", self._active.get(key, key))
+            self._save_locked()
+        return self.status()
+
+    def snooze(self, key: str, minutes: int = 60) -> dict[str, object]:
+        minutes = max(1, int(minutes))
+        until = datetime.now(timezone.utc) + timedelta(minutes=minutes)
+        with self._lock:
+            if key not in self._active:
+                raise KeyError(f"Alert not active: {key}")
+            self._snoozed_until[key] = until.isoformat()
+            self._push_event_locked(
+                "snoozed",
+                f"{self._active.get(key, key)} (until {until.isoformat()})",
+            )
+            self._save_locked()
+        return self.status()
 
     def on_reading(
         self,
@@ -213,9 +272,17 @@ class AlertEngine:
             for key in stale:
                 self._active.pop(key, None)
                 self._last_sent.pop(key, None)
+                self._acked.discard(key)
+                self._snoozed_until.pop(key, None)
             self._unreachable_streak.pop(tx_id, None)
             if stale:
                 self._save_locked()
+
+    def _is_suppressed_locked(self, key: str, now: datetime) -> bool:
+        if key in self._acked:
+            return True
+        until = _parse_time(self._snoozed_until.get(key))
+        return bool(until and until > now)
 
     def _apply(
         self,
@@ -232,21 +299,26 @@ class AlertEngine:
         recovered: list[str] = []
 
         with self._lock:
+            self._prune_snoozes_locked(now)
             existing = [key for key in self._active if key.startswith(prefix)]
             for key in existing:
                 if key not in updates:
                     self._active.pop(key, None)
                     self._last_sent.pop(key, None)
+                    self._acked.discard(key)
+                    self._snoozed_until.pop(key, None)
                     recovered.append(key)
 
             for key, message in updates.items():
                 was_active = key in self._active
                 self._active[key] = message
+                suppressed = self._is_suppressed_locked(key, now)
                 last = _parse_time(self._last_sent.get(key))
                 if not was_active:
-                    new_alarms.append((key, message))
+                    if not suppressed:
+                        new_alarms.append((key, message))
                     self._push_event_locked("alert", message)
-                elif last is None or now - last >= cooldown:
+                elif not suppressed and (last is None or now - last >= cooldown):
                     reminders.append((key, message))
 
             for key in recovered:
@@ -339,6 +411,15 @@ class AlertEngine:
         )
         self._recent_events = self._recent_events[-50:]
 
+    def _prune_snoozes_locked(self, now: datetime) -> None:
+        expired = [
+            key
+            for key, until in self._snoozed_until.items()
+            if not (_parse_time(until) and _parse_time(until) > now)
+        ]
+        for key in expired:
+            self._snoozed_until.pop(key, None)
+
     def _load(self) -> None:
         if not self.state_path.exists():
             return
@@ -348,6 +429,10 @@ class AlertEngine:
             logger.warning("Could not read alert state: %s", error)
             return
         self._active = {str(k): str(v) for k, v in dict(data.get("active") or {}).items()}
+        self._acked = {str(k) for k in (data.get("acked") or [])}
+        self._snoozed_until = {
+            str(k): str(v) for k, v in dict(data.get("snoozed_until") or {}).items()
+        }
         self._last_sent = {
             str(k): str(v) for k, v in dict(data.get("last_sent") or {}).items()
         }
@@ -374,6 +459,8 @@ class AlertEngine:
         self.state_path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
             "active": self._active,
+            "acked": sorted(self._acked),
+            "snoozed_until": self._snoozed_until,
             "last_sent": self._last_sent,
             "unreachable_streak": self._unreachable_streak,
             "last_error": self._last_error,

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings — ASMG TX Dashboard</title>
+  <link rel="stylesheet" href="/static/styles.css?v=8">
+</head>
+<body data-page="settings">
+  <div class="container">
+    <header>
+      <div>
+        <div class="breadcrumb"><a href="/">← Fleet</a></div>
+        <h1>Settings</h1>
+        <p class="sub">Edit transmitters.yaml and reload without restarting</p>
+      </div>
+      <div class="actions">
+        <button id="test-email-btn" type="button">Test email</button>
+        <button id="add-tx-btn" type="button">Add transmitter</button>
+        <button id="save-config-btn" class="primary" type="button">Save config</button>
+      </div>
+    </header>
+
+    <p id="settings-status" class="settings-status" hidden></p>
+
+    <section class="panel">
+      <h2>Global</h2>
+      <div class="form-grid" id="global-form"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Alerts / SMTP</h2>
+      <div class="form-grid" id="alerts-form"></div>
+    </section>
+
+    <section class="panel">
+      <h2>RF controls</h2>
+      <p class="sub" style="margin-bottom:0.75rem">
+        Default off. When enabled, detail pages show RF On/Off with password + confirm.
+        Flexiva and Crown writes are experimental — do not test live until ready.
+      </p>
+      <div class="form-grid" id="controls-form"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Transmitters</h2>
+      <div id="tx-editor" class="tx-editor"></div>
+    </section>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <div class="title" id="toast-title"></div>
+    <div class="body" id="toast-body"></div>
+  </div>
+  <script src="/static/app.js?v=8"></script>
+</body>
+</html>

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import sqlite3
 import threading
 from datetime import datetime, timedelta, timezone
@@ -37,7 +38,57 @@ READING_COLUMNS = (
     "local_remote",
     "active_alarms",
     "error",
+    "meters_json",
 )
+
+SCALAR_KEYS = frozenset(
+    {
+        "fwd_pwr_w",
+        "rfl_pwr_w",
+        "vswr",
+        "heatsink_temp_c",
+        "pa_volts_v",
+        "pa_current_1_a",
+        "ipa_current_a",
+        "plus48_v",
+        "plus15_v",
+        "minus15_v",
+        "plus5_v",
+        "fan1_rpm",
+        "fan2_rpm",
+        "rf_state",
+        "local_remote",
+        "active_alarms",
+    }
+)
+
+
+def _meters_payload(reading: TransmitterReading) -> str:
+    payload: dict[str, float | int] = {}
+    for meter in reading.meters:
+        if meter.value is None:
+            continue
+        if isinstance(meter.value, bool):
+            continue
+        if isinstance(meter.value, (int, float)):
+            payload[meter.key] = meter.value
+    return json.dumps(payload, separators=(",", ":"))
+
+
+def _row_to_point(row: sqlite3.Row | dict[str, Any]) -> dict[str, Any]:
+    point = dict(row)
+    extra_raw = point.pop("meters_json", None) or "{}"
+    try:
+        extra = json.loads(extra_raw) if isinstance(extra_raw, str) else {}
+    except json.JSONDecodeError:
+        extra = {}
+    if isinstance(extra, dict):
+        for key, value in extra.items():
+            if key in SCALAR_KEYS and point.get(key) is not None:
+                continue
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                point[key] = value
+    return point
 
 
 class HistoryStore:
@@ -115,6 +166,7 @@ class HistoryStore:
             "plus5_v": "REAL",
             "fan1_rpm": "INTEGER",
             "fan2_rpm": "INTEGER",
+            "meters_json": "TEXT",
         }
         for name, col_type in wanted.items():
             if name not in existing:
@@ -156,6 +208,7 @@ class HistoryStore:
             reading.local_remote,
             reading.active_alarm_count,
             reading.error,
+            _meters_payload(reading),
         )
         with self._lock, self._connect() as conn:
             conn.execute(
@@ -194,7 +247,7 @@ class HistoryStore:
 
         if len(rows) > limit:
             rows = self._downsample(rows, limit)
-        return [dict(row) for row in rows]
+        return [_row_to_point(row) for row in rows]
 
     @staticmethod
     def _downsample(rows: list[sqlite3.Row], limit: int) -> list[sqlite3.Row]:
@@ -261,9 +314,20 @@ class HistoryStore:
                     (start.isoformat(), end.isoformat(), limit),
                 ).fetchall()
 
+        points = [_row_to_point(row) for row in rows]
+        # Flatten meters_json extras into CSV columns (union of keys).
+        fieldnames = list(READING_COLUMNS)
+        extra_keys: list[str] = []
+        for point in points:
+            for key in point:
+                if key not in fieldnames and key not in extra_keys:
+                    extra_keys.append(key)
+        fieldnames = [c for c in fieldnames if c != "meters_json"] + sorted(extra_keys)
+
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=READING_COLUMNS)
+        writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
-        for row in rows:
-            writer.writerow({col: row[col] for col in READING_COLUMNS})
+        for point in points:
+            row = {key: point.get(key) for key in fieldnames}
+            writer.writerow(row)
         return output.getvalue()

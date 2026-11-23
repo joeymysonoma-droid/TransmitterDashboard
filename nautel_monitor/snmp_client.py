@@ -103,6 +103,28 @@ def _build_get_request(community: str, request_id: int, oids: Iterable[str]) -> 
     return message
 
 
+def _build_set_request(
+    community: str,
+    request_id: int,
+    bindings: list[tuple[str, int]],
+) -> bytes:
+    """Build SNMPv2c SetRequest for integer OID values."""
+    varbinds = b"".join(
+        _encode_sequence(_encode_oid(oid) + _encode_integer(value))
+        for oid, value in bindings
+    )
+    pdu = _encode_sequence(
+        _encode_integer(request_id)
+        + _encode_integer(0)
+        + _encode_integer(0)
+        + _encode_sequence(varbinds),
+        tag=0xA3,  # SetRequest-PDU
+    )
+    return _encode_sequence(
+        _encode_integer(1) + _encode_octet_string(community) + pdu
+    )
+
+
 def _read_length(data: bytes, index: int) -> tuple[int, int]:
     first = data[index]
     index += 1
@@ -238,3 +260,33 @@ def snmp_get(
                 continue
 
     raise SnmpError(f"SNMP GET failed for {host}: {last_error}")
+
+
+def snmp_set(
+    host: str,
+    community: str,
+    bindings: list[tuple[str, int]],
+    port: int = 161,
+    timeout: float = 5.0,
+    retries: int = 2,
+) -> dict[str, int | str | None]:
+    """Perform one SNMPv2c SetRequest for integer OID bindings."""
+    if not bindings:
+        return {}
+
+    request_id = random.randint(1, 0x7FFFFFFF)
+    packet = _build_set_request(community, request_id, bindings)
+
+    last_error: Exception | None = None
+    for _attempt in range(retries + 1):
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.settimeout(timeout)
+            try:
+                sock.sendto(packet, (host, port))
+                data, _addr = sock.recvfrom(65535)
+                return _parse_get_response(data, request_id)
+            except Exception as error:
+                last_error = error
+                continue
+
+    raise SnmpError(f"SNMP SET failed for {host}: {last_error}")
