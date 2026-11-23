@@ -92,10 +92,11 @@ def main() -> int:
 
         app = create_app(config_path)
         logger.info(
-            "Starting ASMG TX Dashboard on http://%s:%s (%d transmitters) config=%s",
+            "Starting ASMG TX Dashboard on http://%s:%s (%d transmitters, %d STL) config=%s",
             host if host != "0.0.0.0" else "localhost",
             port,
             len(config.transmitters),
+            len(config.stl_devices),
             config_path,
         )
         if args.open_browser:

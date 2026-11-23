@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from .models import TransmitterReading
+from .models import StlReading, TransmitterReading
 
 READING_COLUMNS = (
     "timestamp",
@@ -75,6 +75,27 @@ def _meters_payload(reading: TransmitterReading) -> str:
     return json.dumps(payload, separators=(",", ":"))
 
 
+def _stl_point(row: sqlite3.Row | dict[str, Any]) -> dict[str, Any]:
+    point = dict(row)
+    extra_raw = point.pop("meters_json", None) or "{}"
+    alarms_raw = point.pop("alarms_json", None) or "[]"
+    try:
+        extra = json.loads(extra_raw) if isinstance(extra_raw, str) else {}
+    except json.JSONDecodeError:
+        extra = {}
+    try:
+        alarms = json.loads(alarms_raw) if isinstance(alarms_raw, str) else []
+    except json.JSONDecodeError:
+        alarms = []
+    point["alarms"] = alarms if isinstance(alarms, list) else []
+    point["reachable"] = bool(point.get("reachable"))
+    if isinstance(extra, dict):
+        for key, value in extra.items():
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                point[key] = value
+    return point
+
+
 def _row_to_point(row: sqlite3.Row | dict[str, Any]) -> dict[str, Any]:
     point = dict(row)
     extra_raw = point.pop("meters_json", None) or "{}"
@@ -103,6 +124,7 @@ class HistoryStore:
         self.min_interval = min_interval
         self._lock = threading.Lock()
         self._last_save: dict[str, datetime] = {}
+        self._last_save_stl: dict[str, datetime] = {}
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
 
@@ -150,6 +172,30 @@ class HistoryStore:
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_readings_tx_ts "
                 "ON readings(tx_id, timestamp)"
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS stl_readings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    stl_id TEXT NOT NULL,
+                    host TEXT,
+                    name TEXT,
+                    model TEXT,
+                    location TEXT,
+                    reachable INTEGER,
+                    status TEXT,
+                    link_state TEXT,
+                    active_alarms INTEGER,
+                    error TEXT,
+                    meters_json TEXT,
+                    alarms_json TEXT
+                )
+                """
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_stl_readings_id_ts "
+                "ON stl_readings(stl_id, timestamp)"
             )
 
     def _ensure_columns(self, conn: sqlite3.Connection) -> None:
@@ -225,6 +271,79 @@ class HistoryStore:
             datetime.now(timezone.utc) - timedelta(days=self.retention_days)
         ).isoformat()
         conn.execute("DELETE FROM readings WHERE timestamp < ?", (cutoff,))
+        conn.execute("DELETE FROM stl_readings WHERE timestamp < ?", (cutoff,))
+
+    def maybe_save_stl(self, reading: StlReading) -> bool:
+        last = self._last_save_stl.get(reading.stl_id)
+        if last is not None:
+            elapsed = (reading.timestamp - last).total_seconds()
+            if elapsed < self.min_interval:
+                return False
+        self.save_stl(reading)
+        self._last_save_stl[reading.stl_id] = reading.timestamp
+        return True
+
+    def save_stl(self, reading: StlReading) -> None:
+        meters: dict[str, float | int] = {}
+        for meter in reading.meters:
+            if isinstance(meter.value, bool) or meter.value is None:
+                continue
+            if isinstance(meter.value, (int, float)):
+                meters[meter.key] = meter.value
+        alarms = [
+            {"key": alarm.key, "label": alarm.label, "active": alarm.active}
+            for alarm in reading.alarms
+        ]
+        row = (
+            reading.timestamp.isoformat(),
+            reading.stl_id,
+            reading.host,
+            reading.name,
+            reading.model,
+            reading.location,
+            1 if reading.reachable else 0,
+            reading.status,
+            reading.link_state,
+            reading.active_alarm_count,
+            reading.error,
+            json.dumps(meters, separators=(",", ":")),
+            json.dumps(alarms, separators=(",", ":")),
+        )
+        with self._lock, self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO stl_readings (
+                    timestamp, stl_id, host, name, model, location, reachable,
+                    status, link_state, active_alarms, error, meters_json, alarms_json
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                row,
+            )
+            self._purge_old(conn)
+
+    def query_stl(
+        self,
+        stl_id: str,
+        hours: float = 24,
+        limit: int = 2000,
+    ) -> list[dict[str, Any]]:
+        end = datetime.now(timezone.utc)
+        start = end - timedelta(hours=hours)
+        with self._lock, self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT timestamp, stl_id, host, name, model, location, reachable,
+                       status, link_state, active_alarms, error, meters_json, alarms_json
+                FROM stl_readings
+                WHERE stl_id = ? AND timestamp >= ? AND timestamp <= ?
+                ORDER BY timestamp ASC
+                """,
+                (stl_id, start.isoformat(), end.isoformat()),
+            ).fetchall()
+        if len(rows) > limit:
+            rows = self._downsample(rows, limit)
+        return [_stl_point(row) for row in rows]
 
     def query(
         self,
@@ -268,12 +387,14 @@ class HistoryStore:
             newest = conn.execute(
                 "SELECT MAX(timestamp) FROM readings"
             ).fetchone()[0]
+            stl_count = conn.execute("SELECT COUNT(*) FROM stl_readings").fetchone()[0]
         return {
             "count": count,
             "oldest": oldest,
             "newest": newest,
             "retention_days": self.retention_days,
             "min_interval_seconds": self.min_interval,
+            "stl_count": stl_count,
         }
 
     def export_csv(

@@ -13,9 +13,15 @@ from .models import (
     AAT_MODELS,
     CROWN_MODELS,
     FLEXIVA_MODELS,
+    BRICLINK_MODELS,
+    COMREX_MODELS,
+    HDLINK_MODELS,
+    IPLINK_MODELS,
+    INSTREAM_MODELS,
     AlertConfig,
     AppConfig,
     ControlsConfig,
+    StlDeviceConfig,
     TransmitterConfig,
 )
 from .paths import resolve_config_path
@@ -41,6 +47,34 @@ def _optional_bool(value: Any) -> bool | None:
     if value is None or value == "":
         return None
     return bool(value)
+
+
+STL_MODELS = frozenset(
+    {
+        *HDLINK_MODELS,
+        *IPLINK_MODELS,
+        *COMREX_MODELS,
+        *BRICLINK_MODELS,
+        *INSTREAM_MODELS,
+    }
+)
+
+
+def _stl_from_dict(raw: dict[str, Any]) -> StlDeviceConfig:
+    overrides = raw.get("alerts")
+    model = str(raw.get("model") or "hdlink").lower().strip()
+    return StlDeviceConfig(
+        id=str(raw["id"]).strip(),
+        name=str(raw.get("name") or raw["id"]),
+        model=model,
+        host=str(raw.get("host") or "").strip(),
+        snmp_community=str(raw.get("snmp_community") or "public"),
+        snmp_port=int(raw.get("snmp_port") or 161),
+        location=str(raw.get("location") or ""),
+        alert_overrides=dict(overrides) if isinstance(overrides, dict) else {},
+        related_tx_id=str(raw.get("related_tx_id") or "").strip(),
+        http_password=str(raw.get("http_password") or ""),
+    )
 
 
 def _tx_from_dict(raw: dict[str, Any]) -> TransmitterConfig:
@@ -138,9 +172,11 @@ def load_config(path: str | Path | None = None) -> AppConfig:
     transmitters = [_tx_from_dict(item) for item in raw.get("transmitters") or []]
     if not transmitters:
         raise ValueError("No transmitters defined in config")
+    stl_devices = [_stl_from_dict(item) for item in raw.get("stl_devices") or []]
 
     return AppConfig(
         transmitters=transmitters,
+        stl_devices=stl_devices,
         poll_interval_seconds=int(raw.get("poll_interval_seconds") or 30),
         history_retention_days=int(raw.get("history_retention_days") or 90),
         history_min_interval_seconds=int(
@@ -185,6 +221,25 @@ def _controls_to_dict(controls: ControlsConfig) -> dict[str, Any]:
     }
 
 
+def _stl_to_dict(device: StlDeviceConfig) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "id": device.id,
+        "name": device.name,
+        "model": device.model,
+        "host": device.host,
+        "snmp_community": device.snmp_community,
+        "snmp_port": device.snmp_port,
+        "location": device.location,
+    }
+    if device.http_password:
+        payload["http_password"] = device.http_password
+    if device.related_tx_id:
+        payload["related_tx_id"] = device.related_tx_id
+    if device.alert_overrides:
+        payload["alerts"] = dict(device.alert_overrides)
+    return payload
+
+
 def _tx_to_dict(tx: TransmitterConfig) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "id": tx.id,
@@ -213,6 +268,7 @@ def config_to_dict(config: AppConfig, *, mask_secrets: bool = False) -> dict[str
     alerts = _alerts_to_dict(config.alerts)
     controls = _controls_to_dict(config.controls)
     transmitters = [_tx_to_dict(tx) for tx in config.transmitters]
+    stl_devices = [_stl_to_dict(device) for device in config.stl_devices]
     if mask_secrets:
         if alerts.get("smtp_password"):
             alerts["smtp_password"] = PASSWORD_MASK
@@ -223,6 +279,11 @@ def config_to_dict(config: AppConfig, *, mask_secrets: bool = False) -> dict[str
                 tx["http_password"] = PASSWORD_MASK
             if tx.get("controls_password"):
                 tx["controls_password"] = PASSWORD_MASK
+        for device in stl_devices:
+            if device.get("snmp_community"):
+                device["snmp_community"] = PASSWORD_MASK
+            if device.get("http_password"):
+                device["http_password"] = PASSWORD_MASK
     return {
         "poll_interval_seconds": config.poll_interval_seconds,
         "history_retention_days": config.history_retention_days,
@@ -234,6 +295,7 @@ def config_to_dict(config: AppConfig, *, mask_secrets: bool = False) -> dict[str
         "alerts": alerts,
         "controls": controls,
         "transmitters": transmitters,
+        "stl_devices": stl_devices,
     }
 
 
@@ -266,12 +328,33 @@ def validate_config_dict(raw: dict[str, Any]) -> AppConfig:
             raise ValueError(f"Invalid http_port for {tx.id}")
         transmitters.append(tx)
 
+    stl_raw = raw.get("stl_devices") or []
+    if not isinstance(stl_raw, list):
+        raise ValueError("stl_devices must be a list")
+    stl_devices: list[StlDeviceConfig] = []
+    seen_stl: set[str] = set()
+    for item in stl_raw:
+        if not isinstance(item, dict):
+            raise ValueError("Each STL device must be an object")
+        if not item.get("id"):
+            raise ValueError("Each STL device needs an id")
+        device = _stl_from_dict(item)
+        if device.id in seen_stl:
+            raise ValueError(f"Duplicate STL id: {device.id}")
+        seen_stl.add(device.id)
+        if device.model not in STL_MODELS:
+            raise ValueError(f"Unsupported STL model: {device.model}")
+        if device.snmp_port < 1 or device.snmp_port > 65535:
+            raise ValueError(f"Invalid snmp_port for {device.id}")
+        stl_devices.append(device)
+
     http_port = int(raw.get("http_port") or 8090)
     if http_port < 1 or http_port > 65535:
         raise ValueError("Invalid http_port")
 
     return AppConfig(
         transmitters=transmitters,
+        stl_devices=stl_devices,
         poll_interval_seconds=max(5, int(raw.get("poll_interval_seconds") or 30)),
         history_retention_days=max(1, int(raw.get("history_retention_days") or 90)),
         history_min_interval_seconds=max(
@@ -319,6 +402,31 @@ def merge_secrets(incoming: AppConfig, existing: AppConfig) -> AppConfig:
             )
         )
 
+    existing_stl = {device.id: device for device in existing.stl_devices}
+    merged_stl: list[StlDeviceConfig] = []
+    for device in incoming.stl_devices:
+        prev = existing_stl.get(device.id)
+        community = device.snmp_community
+        if community == PASSWORD_MASK:
+            community = prev.snmp_community if prev else "public"
+        http_password = device.http_password
+        if http_password == PASSWORD_MASK:
+            http_password = prev.http_password if prev else ""
+        merged_stl.append(
+            StlDeviceConfig(
+                id=device.id,
+                name=device.name,
+                model=device.model,
+                host=device.host,
+                snmp_community=community,
+                snmp_port=device.snmp_port,
+                location=device.location,
+                alert_overrides=dict(device.alert_overrides),
+                related_tx_id=device.related_tx_id,
+                http_password=http_password,
+            )
+        )
+
     smtp_password = incoming.alerts.smtp_password
     if smtp_password == PASSWORD_MASK:
         smtp_password = existing.alerts.smtp_password
@@ -349,6 +457,7 @@ def merge_secrets(incoming: AppConfig, existing: AppConfig) -> AppConfig:
     )
     return AppConfig(
         transmitters=merged_txs,
+        stl_devices=merged_stl,
         poll_interval_seconds=incoming.poll_interval_seconds,
         history_retention_days=incoming.history_retention_days,
         history_min_interval_seconds=incoming.history_min_interval_seconds,

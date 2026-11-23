@@ -12,7 +12,7 @@ from email.message import EmailMessage
 from pathlib import Path
 from typing import Any
 
-from .models import AlertConfig, TransmitterReading
+from .models import AlertConfig, StlReading, TransmitterReading
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,30 @@ def merge_alert_config(
             value = overrides[key]
             updates[key] = None if value is None or value == "" else float(value)
     return replace(base, **updates) if updates else base
+
+
+def _stl_error_threshold(overrides: dict[str, Any] | None) -> float | None:
+    if not overrides or "error_rate" not in overrides:
+        return None
+    value = overrides.get("error_rate")
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _stl_error_value(reading: StlReading) -> float | None:
+    for key in ("error_rate", "packet_loss_pct"):
+        for meter in reading.meters:
+            if meter.key != key:
+                continue
+            if isinstance(meter.value, bool) or meter.value is None:
+                continue
+            if isinstance(meter.value, (int, float)):
+                return float(meter.value)
+    return None
 
 
 def email_ready(config: AlertConfig) -> tuple[bool, str]:
@@ -154,6 +178,97 @@ class AlertEngine:
             )
             self._save_locked()
         return self.status()
+
+    def prune_stl(self, keep_ids: set[str]) -> None:
+        """Drop alerts for STL ids that are no longer in the config."""
+        with self._lock:
+            stale_ids: set[str] = set()
+            stale_names: set[str] = set()
+            for key, message in self._active.items():
+                if not key.startswith("stl:"):
+                    continue
+                stl_id = key.split(":", 2)[1]
+                if stl_id not in keep_ids:
+                    stale_ids.add(stl_id)
+                    stale_names.add(str(message).split(" link ", 1)[0].strip())
+            for key in self._unreachable_streak:
+                if not key.startswith("stl:"):
+                    continue
+                stl_id = key.split(":", 1)[1]
+                if stl_id not in keep_ids:
+                    stale_ids.add(stl_id)
+            kept_events = []
+            for event in self._recent_events:
+                message = str(event.get("message") or "")
+                if any(name and message.startswith(name) for name in stale_names):
+                    continue
+                kept_events.append(event)
+            if len(kept_events) != len(self._recent_events):
+                self._recent_events = kept_events
+                self._save_locked()
+        for stl_id in stale_ids:
+            self.clear_stl(stl_id)
+
+    def clear_stl(self, stl_id: str) -> None:
+        prefix = f"stl:{stl_id}:"
+        streak_key = f"stl:{stl_id}"
+        with self._lock:
+            stale = [key for key in self._active if key.startswith(prefix)]
+            for key in stale:
+                self._active.pop(key, None)
+                self._last_sent.pop(key, None)
+                self._acked.discard(key)
+                self._snoozed_until.pop(key, None)
+            had_streak = streak_key in self._unreachable_streak
+            self._unreachable_streak.pop(streak_key, None)
+            if stale or had_streak:
+                self._save_locked()
+
+    def on_stl_reading(
+        self,
+        reading: StlReading,
+        *,
+        configured: bool,
+        overrides: dict[str, Any] | None = None,
+    ) -> None:
+        """STL rules only. Keys are stl:{id}:... so they do not collide with transmitters."""
+        cfg = merge_alert_config(self.config, overrides)
+        streak_key = f"stl:{reading.stl_id}"
+        prefix = f"{streak_key}:"
+        if cfg.skip_unconfigured and not configured:
+            self.clear_stl(reading.stl_id)
+            return
+
+        active: dict[str, str] = {}
+        if configured and (not reading.reachable or reading.status == "offline"):
+            streak = self._unreachable_streak.get(streak_key, 0) + 1
+            self._unreachable_streak[streak_key] = streak
+            if cfg.on_unreachable and streak >= max(1, cfg.unreachable_polls):
+                detail = reading.error or "SNMP unreachable"
+                active[f"{prefix}unreachable"] = (
+                    f"{reading.name} unreachable for {streak} polls ({detail})"
+                )
+        else:
+            self._unreachable_streak[streak_key] = 0
+
+        if reading.reachable and reading.status != "offline":
+            if reading.link_state in {"down", "degraded"}:
+                label = reading.link_label or reading.link_state
+                active[f"{prefix}link_down"] = f"{reading.name} link {label}"
+            for alarm in reading.alarms:
+                if alarm.active and alarm.key != "link_down":
+                    active[f"{prefix}alarm:{alarm.key}"] = (
+                        f"{reading.name}: {alarm.label}"
+                    )
+            threshold = _stl_error_threshold(overrides)
+            if threshold is not None:
+                rate = _stl_error_value(reading)
+                if rate is not None and rate >= threshold:
+                    active[f"{prefix}error_rate"] = (
+                        f"{reading.name} error rate {rate:.3f} >= {threshold:.3f}"
+                    )
+
+        self._apply(streak_key, active, reading)
 
     def on_reading(
         self,
@@ -288,7 +403,7 @@ class AlertEngine:
         self,
         tx_id: str,
         updates: dict[str, str],
-        reading: TransmitterReading,
+        reading: TransmitterReading | StlReading,
     ) -> None:
         ready, _reason = email_ready(self.config)
         now = datetime.now(timezone.utc)
@@ -335,16 +450,17 @@ class AlertEngine:
     def _send_group(
         self,
         kind: str,
-        reading: TransmitterReading,
+        reading: TransmitterReading | StlReading,
         items: list[tuple[str, str]],
     ) -> None:
         titles = "; ".join(message for _key, message in items)
         subject = f"[ASMG] {kind}: {titles}"
         if len(subject) > 180:
             subject = subject[:177] + "..."
+        device = "STL" if isinstance(reading, StlReading) else "Transmitter"
         lines = [
             titles,
-            f"Transmitter: {reading.name}",
+            f"{device}: {reading.name}",
             f"Host: {reading.host}",
             "",
             *reading.summary_lines(),
@@ -352,12 +468,13 @@ class AlertEngine:
         self._deliver(subject, "\n".join(lines), tuple(key for key, _ in items))
 
     def _send_recovery(
-        self, reading: TransmitterReading, keys: list[str]
+        self, reading: TransmitterReading | StlReading, keys: list[str]
     ) -> None:
         label = ", ".join(keys)
+        device = "STL" if isinstance(reading, StlReading) else "Transmitter"
         lines = [
             f"Cleared: {label}",
-            f"Transmitter: {reading.name}",
+            f"{device}: {reading.name}",
             f"Host: {reading.host}",
             "",
             *reading.summary_lines(),

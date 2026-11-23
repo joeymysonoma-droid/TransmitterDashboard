@@ -9,6 +9,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
+from . import __version__
 from .alerts import AlertEngine
 from .config import (
     config_to_dict,
@@ -27,6 +28,7 @@ from .controls import (
 from .history import HistoryStore
 from .paths import data_dir, resolve_config_path, static_dir
 from .poller import FleetPoller
+from .stl_poller import StlPoller
 
 
 def create_app(config_path: str | Path | None = None) -> FastAPI:
@@ -41,9 +43,11 @@ def create_app(config_path: str | Path | None = None) -> FastAPI:
     )
     alerts = AlertEngine(config.alerts, data / "alert_state.json")
     poller = FleetPoller(config, history, alerts=alerts)
+    stl_poller = StlPoller(config, history, alerts=alerts)
 
-    app = FastAPI(title="ASMG TX Dashboard", version="1.5.0")
+    app = FastAPI(title="ASMG TX Dashboard", version=__version__)
     app.state.poller = poller
+    app.state.stl_poller = stl_poller
     app.state.history = history
     app.state.alerts = alerts
     app.state.config = config
@@ -52,17 +56,20 @@ def create_app(config_path: str | Path | None = None) -> FastAPI:
     @app.on_event("startup")
     def _startup() -> None:
         poller.start()
+        stl_poller.start()
 
     @app.on_event("shutdown")
     def _shutdown() -> None:
         poller.stop()
+        stl_poller.stop()
 
     @app.get("/api/health")
     def health() -> dict:
         return {
             "ok": True,
-            "version": "1.5.0",
+            "version": __version__,
             "transmitters": len(poller.config.transmitters),
+            "stl_devices": len(stl_poller.config.stl_devices),
             "poll_interval_seconds": poller.config.poll_interval_seconds,
             "alerts": alerts.status(),
             "controls": controls_status(poller.config),
@@ -240,20 +247,75 @@ def create_app(config_path: str | Path | None = None) -> FastAPI:
             ) from error
 
         poller.reload_config(merged)
+        stl_poller.reload_config(merged)
         app.state.config = merged
         return {
             "ok": True,
             "config": config_to_dict(merged, mask_secrets=True),
             "summary": _summary(poller.get_all()),
+            "stl_summary": _stl_summary(stl_poller.get_all()),
         }
 
     @app.get("/api/history/stats")
     def history_stats() -> dict:
         return history.stats()
 
+    @app.get("/api/stl")
+    def list_stl() -> dict:
+        readings = stl_poller.get_all()
+        return {
+            "devices": [reading.to_dict() for reading in readings],
+            "summary": _stl_summary(readings),
+            "alerts": alerts.status(),
+        }
+
+    @app.get("/api/stl/{stl_id}")
+    def get_stl(stl_id: str) -> dict:
+        reading = stl_poller.get_one(stl_id)
+        if reading is None:
+            raise HTTPException(status_code=404, detail="STL device not found")
+        return reading.to_dict()
+
+    @app.get("/api/stl/{stl_id}/history")
+    def stl_history(
+        stl_id: str,
+        range: str = Query("24h", pattern="^(1h|24h|7d|30d)$"),
+    ) -> dict:
+        if stl_poller.get_one(stl_id) is None:
+            raise HTTPException(status_code=404, detail="STL device not found")
+        hours = {"1h": 1, "24h": 24, "7d": 168, "30d": 720}[range]
+        points = history.query_stl(stl_id, hours=hours)
+        return {"stl_id": stl_id, "range": range, "points": points}
+
+    @app.post("/api/stl/poll")
+    def poll_stl_now() -> dict:
+        readings = stl_poller.poll_all()
+        return {
+            "devices": [reading.to_dict() for reading in readings],
+            "summary": _stl_summary(readings),
+            "alerts": alerts.status(),
+        }
+
+    @app.post("/api/stl/{stl_id}/poll")
+    def poll_stl_one(stl_id: str) -> dict:
+        reading = stl_poller.poll_and_store(stl_id)
+        if reading is None:
+            raise HTTPException(status_code=404, detail="STL device not found")
+        return reading.to_dict()
+
     @app.get("/")
     def index() -> FileResponse:
         return FileResponse(static / "index.html")
+
+    @app.get("/stl")
+    def stl_page() -> FileResponse:
+        return FileResponse(static / "stl.html")
+
+    @app.get("/stl/{stl_id}")
+    def stl_detail_page(stl_id: str) -> FileResponse:
+        if stl_poller.get_one(stl_id) is None:
+            raise HTTPException(status_code=404, detail="STL device not found")
+        return FileResponse(static / "stl.html")
 
     @app.get("/wall")
     def wall_page() -> FileResponse:
@@ -281,6 +343,21 @@ async def _json_body(request: Request) -> dict[str, Any]:
     if not isinstance(body, dict):
         raise HTTPException(status_code=400, detail="JSON object required")
     return body
+
+
+def _stl_summary(readings: list) -> dict:
+    counts = {"online": 0, "degraded": 0, "offline": 0}
+    alarms = 0
+    for reading in readings:
+        counts[reading.status] = counts.get(reading.status, 0) + 1
+        alarms += reading.active_alarm_count
+    return {
+        "total": len(readings),
+        "online": counts["online"],
+        "degraded": counts["degraded"],
+        "offline": counts["offline"],
+        "active_alarms": alarms,
+    }
 
 
 def _summary(readings: list) -> dict:

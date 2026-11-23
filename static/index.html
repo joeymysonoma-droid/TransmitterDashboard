@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ASMG TX Dashboard</title>
-  <link rel="stylesheet" href="/static/styles.css?v=8">
+  <link rel="stylesheet" href="/static/styles.css?v=13">
 </head>
 <body data-page="fleet">
   <div class="container">
@@ -16,6 +16,7 @@
       <div class="actions">
         <span id="updated" class="sub"></span>
         <a class="btn" href="/wall">Wall view</a>
+        <a class="btn" href="/stl">STL</a>
         <a class="btn" href="/settings">Settings</a>
         <a class="btn" href="/api/history.csv?range=24h">Export fleet CSV</a>
         <button id="refresh-btn" class="primary" type="button">Poll now</button>
@@ -43,6 +44,6 @@
     <div class="title" id="toast-title"></div>
     <div class="body" id="toast-body"></div>
   </div>
-  <script src="/static/app.js?v=8"></script>
+  <script src="/static/app.js?v=13"></script>
 </body>
 </html>

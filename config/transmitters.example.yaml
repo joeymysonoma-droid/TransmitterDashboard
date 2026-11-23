@@ -143,3 +143,44 @@ transmitters:
       reflected_w: 80.0
       vswr: 1.5
       heatsink_c: 85.0
+
+# STL links are a separate device class. They do not appear on the
+# transmitter fleet and they are not stored in transmitter history.
+# Read-only SNMPv2c only. Do not point these at Flexiva enterprise
+# 1.3.6.1.4.1.43768. Hosts below are documentation placeholders.
+# stl_devices:
+#   - id: hdlink-1
+#     name: "HD Link"
+#     model: hdlink
+#     host: "192.0.2.20"
+#     snmp_community: public
+#     snmp_port: 161
+#     location: "Studio"
+#     related_tx_id: ""
+#     alerts:
+#       error_rate: null
+#   - id: iplink-1
+#     name: "IP Link"
+#     model: iplink
+#     host: "192.0.2.21"
+#     snmp_community: public
+#     snmp_port: 161
+#     location: "Transmitter"
+#     related_tx_id: ""
+#   - id: instream-1
+#     name: "Instream"
+#     model: instream
+#     host: "192.0.2.30"
+#     location: "Studio"
+#   - id: comrex-1
+#     name: "Comrex ACCESS"
+#     model: comrex
+#     host: "192.0.2.31"
+#     http_password: "set-a-real-password"
+#     location: "Studio"
+#   - id: bric-1
+#     name: "BRIC-Link"
+#     model: briclink
+#     host: "192.0.2.32"
+#     http_password: "set-a-real-password"
+#     location: "Studio"

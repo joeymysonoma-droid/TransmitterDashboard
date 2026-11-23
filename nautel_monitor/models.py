@@ -13,6 +13,15 @@ NA_SENTINEL = -2147483648
 FLEXIVA_MODELS = frozenset({"flexiva", "fax", "fax1k", "gatesair"})
 AAT_MODELS = frozenset({"aat", "aat_fm", "american_amplifier"})
 CROWN_MODELS = frozenset({"crown", "ecreso", "fmngip", "audemat_fm"})
+HDLINK_MODELS = frozenset({"hdlink", "hd-link", "hd_link"})
+IPLINK_MODELS = frozenset({"iplink", "ip-link", "ip_link"})
+COMREX_MODELS = frozenset({"comrex", "access", "comrex-access"})
+BRICLINK_MODELS = frozenset(
+    {"briclink", "bric-link", "bric", "bric2", "bric-2", "brixlink"}
+)
+INSTREAM_MODELS = frozenset(
+    {"instream", "instreamer", "instreamers", "sitestreamer", "inovonics", "635"}
+)
 
 
 def utc_now() -> datetime:
@@ -29,6 +38,36 @@ def is_aat_model(model: str) -> bool:
 
 def is_crown_model(model: str) -> bool:
     return model.lower().strip() in CROWN_MODELS
+
+
+def is_hdlink_model(model: str) -> bool:
+    return model.lower().strip() in HDLINK_MODELS
+
+
+def is_iplink_model(model: str) -> bool:
+    return model.lower().strip() in IPLINK_MODELS
+
+
+def is_comrex_model(model: str) -> bool:
+    return model.lower().strip() in COMREX_MODELS
+
+
+def is_briclink_model(model: str) -> bool:
+    return model.lower().strip() in BRICLINK_MODELS
+
+
+def is_instream_model(model: str) -> bool:
+    return model.lower().strip() in INSTREAM_MODELS
+
+
+def is_stl_model(model: str) -> bool:
+    return (
+        is_hdlink_model(model)
+        or is_iplink_model(model)
+        or is_comrex_model(model)
+        or is_briclink_model(model)
+        or is_instream_model(model)
+    )
 
 
 @dataclass
@@ -104,8 +143,38 @@ class ControlsConfig:
 
 
 @dataclass
+class StlDeviceConfig:
+    """Link or codec. Not a transmitter and not stored as a TransmitterReading."""
+
+    id: str
+    name: str
+    model: str  # hdlink | iplink | comrex | briclink | instream
+    host: str
+    snmp_community: str = "public"
+    snmp_port: int = 161
+    location: str = ""
+    alert_overrides: dict[str, Any] = field(default_factory=dict)
+    related_tx_id: str = ""
+    # Comrex ACCESS and BRIC-Link web password. Masked like other secrets.
+    http_password: str = ""
+
+    @property
+    def configured(self) -> bool:
+        return bool(self.host and self.host.strip())
+
+    @property
+    def is_hdlink(self) -> bool:
+        return is_hdlink_model(self.model)
+
+    @property
+    def is_iplink(self) -> bool:
+        return is_iplink_model(self.model)
+
+
+@dataclass
 class AppConfig:
     transmitters: list[TransmitterConfig]
+    stl_devices: list[StlDeviceConfig] = field(default_factory=list)
     poll_interval_seconds: int = 30
     history_retention_days: int = 90
     history_min_interval_seconds: int = 60
@@ -216,4 +285,67 @@ class TransmitterReading:
         else:
             data["aui_url"] = f"http://{self.host}"
             data["aui_label"] = "Open AUI"
+        return data
+
+
+def stl_model_label(model: str) -> str:
+    if is_hdlink_model(model):
+        return "HD Link"
+    if is_iplink_model(model):
+        return "IP Link"
+    if is_comrex_model(model):
+        return "Comrex"
+    if is_briclink_model(model):
+        return "BRIC-Link"
+    if is_instream_model(model):
+        return "Instream"
+    return model or "STL"
+
+
+@dataclass
+class StlReading:
+    """One STL poll. No forward power, VSWR, or RF-on fields."""
+
+    stl_id: str
+    timestamp: datetime
+    reachable: bool
+    status: str  # online | degraded | offline
+    host: str
+    name: str
+    model: str
+    location: str = ""
+    link_state: str = "unknown"  # up | down | degraded | unknown
+    link_label: str = ""
+    meters: list[MeterReading] = field(default_factory=list)
+    alarms: list[AlarmState] = field(default_factory=list)
+    error: str | None = None
+    oid_ok: int = 0
+    oid_total: int = 0
+    related_tx_id: str = ""
+
+    @property
+    def active_alarm_count(self) -> int:
+        return sum(1 for alarm in self.alarms if alarm.active)
+
+    def summary_lines(self) -> list[str]:
+        meter_bits = [
+            f"{meter.label}: {meter.value if meter.value is not None else '—'} {meter.unit}".rstrip()
+            for meter in self.meters[:4]
+        ]
+        return [
+            f"Status: {self.status}",
+            f"Link: {self.link_label or self.link_state}",
+            *meter_bits,
+            f"Active alarms: {self.active_alarm_count}",
+        ]
+
+    def to_dict(self) -> dict[str, Any]:
+        data = asdict(self)
+        data["timestamp"] = self.timestamp.isoformat()
+        data["active_alarm_count"] = self.active_alarm_count
+        data["model_label"] = stl_model_label(self.model)
+        if self.host:
+            data["gui_url"] = f"http://{self.host}"
+        else:
+            data["gui_url"] = None
         return data

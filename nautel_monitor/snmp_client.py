@@ -262,6 +262,72 @@ def snmp_get(
     raise SnmpError(f"SNMP GET failed for {host}: {last_error}")
 
 
+def _build_getnext_request(community: str, request_id: int, oid: str) -> bytes:
+    varbinds = _encode_sequence(_encode_oid(oid) + _encode_null())
+    pdu = _encode_sequence(
+        _encode_integer(request_id)
+        + _encode_integer(0)
+        + _encode_integer(0)
+        + _encode_sequence(varbinds),
+        tag=0xA1,  # GetNextRequest-PDU
+    )
+    return _encode_sequence(_encode_integer(1) + _encode_octet_string(community) + pdu)
+
+
+def _parse_getnext_response(data: bytes, expected_id: int) -> tuple[str, int | str | None]:
+    tag, value, _ = _read_tlv(data, 0)
+    if tag != 0x30:
+        raise SnmpError("Response is not an SNMP message")
+    index = 0
+    tag, _ver, index = _read_tlv(value, index)
+    tag, _community, index = _read_tlv(value, index)
+    tag, pdu, index = _read_tlv(value, index)
+    if tag not in (0xA2, 0xA1, 0xA0):
+        raise SnmpError(f"Unexpected PDU tag 0x{tag:02x}")
+    pdu_index = 0
+    tag, req_raw, pdu_index = _read_tlv(pdu, pdu_index)
+    if _decode_integer(req_raw) != expected_id:
+        raise SnmpError("Request ID mismatch")
+    tag, err_raw, pdu_index = _read_tlv(pdu, pdu_index)
+    if _decode_integer(err_raw) != 0:
+        raise SnmpError(f"SNMP error-status={_decode_integer(err_raw)}")
+    tag, _err_index, pdu_index = _read_tlv(pdu, pdu_index)
+    tag, varbind_list, pdu_index = _read_tlv(pdu, pdu_index)
+    tag, vb, _ = _read_tlv(varbind_list, 0)
+    inner = 0
+    tag, oid_raw, inner = _read_tlv(vb, inner)
+    oid = _decode_oid(oid_raw)
+    tag, val_raw, inner = _read_tlv(vb, inner)
+    if tag in (0x80, 0x81, 0x82):
+        raise SnmpError("end of mib")
+    return oid, _decode_varbind_value(tag, val_raw)
+
+
+def snmp_getnext(
+    host: str,
+    community: str,
+    oid: str,
+    port: int = 161,
+    timeout: float = 5.0,
+    retries: int = 1,
+) -> tuple[str, int | str | None]:
+    """SNMPv2c GetNext. Read only."""
+    request_id = random.randint(1, 0x7FFFFFFF)
+    packet = _build_getnext_request(community, request_id, oid)
+    last_error: Exception | None = None
+    for _attempt in range(retries + 1):
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.settimeout(timeout)
+            try:
+                sock.sendto(packet, (host, port))
+                data, _addr = sock.recvfrom(65535)
+                return _parse_getnext_response(data, request_id)
+            except Exception as error:
+                last_error = error
+                continue
+    raise SnmpError(f"SNMP GETNEXT failed for {host}: {last_error}")
+
+
 def snmp_set(
     host: str,
     community: str,

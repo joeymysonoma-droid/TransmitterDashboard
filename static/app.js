@@ -88,8 +88,8 @@ function fmtMeter(value, unit) {
   if (unit === "°C") return `${fmtNum(value, 1)} °C`;
   if (unit === "V") return `${fmtNum(value, 2)} V`;
   if (unit === "A") return `${fmtNum(value, 2)} A`;
-  if (unit === "%") return `${fmtNum(value, 1)} %`;
-  if (!unit) return fmtNum(value, 3);
+  if (unit === "%") return `${fmtNum(value, 2)} %`;
+  if (!unit) return fmtNum(value, Number.isInteger(value) ? 0 : 2);
   return `${fmtNum(value, 2)} ${unit}`;
 }
 
@@ -760,7 +760,7 @@ function optFloat(value) {
 
 function collectConfigFromForm() {
   const transmitters = [];
-  document.querySelectorAll(".tx-edit-card").forEach((card) => {
+  document.querySelectorAll(".tx-edit-card[data-idx]").forEach((card) => {
     const idx = card.getAttribute("data-idx");
     const alerts = {};
     const fwd = optFloat(readInput(`tx.${idx}.alerts.forward_min_w`, card));
@@ -823,6 +823,7 @@ function collectConfigFromForm() {
       password: String(readInput("controls_password") || ""),
     },
     transmitters,
+    stl_devices: collectStlFromForm(),
   };
 }
 
@@ -840,6 +841,7 @@ async function loadSettings() {
   renderAlertsForm(cfg.alerts || {});
   renderControlsForm(cfg.controls || {});
   renderTxEditor(cfg.transmitters?.length ? cfg.transmitters : [emptyTx()]);
+  renderStlEditor(cfg.stl_devices || []);
   const alerts = await fetchJson("/api/alerts");
   updateTestEmailButton(alerts);
 }
@@ -858,6 +860,7 @@ async function saveSettings() {
     renderAlertsForm(result.config.alerts || {});
     renderControlsForm(result.config.controls || {});
     renderTxEditor(result.config.transmitters || []);
+    renderStlEditor(result.config.stl_devices || []);
   } catch (err) {
     setSettingsStatus(err.message || String(err), true);
     showToast("Save failed", err.message || String(err), true);
@@ -1017,10 +1020,336 @@ async function initSettingsPage() {
     cfg.transmitters.push(emptyTx());
     renderTxEditor(cfg.transmitters);
   });
+  document.getElementById("add-stl-btn")?.addEventListener("click", () => {
+    const devices = collectStlFromForm();
+    devices.push(emptyStl());
+    renderStlEditor(devices);
+  });
   document.getElementById("test-email-btn")?.addEventListener("click", () => {
     sendTestEmail().catch(console.error);
   });
   await loadSettings();
+}
+
+function emptyStl() {
+  return {
+    id: "",
+    name: "",
+    model: "hdlink",
+    host: "",
+    snmp_community: "public",
+    snmp_port: 161,
+    location: "",
+    related_tx_id: "",
+    http_password: "",
+    alerts: {},
+  };
+}
+
+function renderStlEditor(devices) {
+  const root = document.getElementById("stl-editor");
+  if (!root) return;
+  const list = devices || [];
+  if (!list.length) {
+    root.innerHTML = `<p class="empty">No STL links configured.</p>`;
+    return;
+  }
+  root.innerHTML = list
+    .map((device, idx) => {
+      const overrides = device.alerts || {};
+      const model = String(device.model || "hdlink").toLowerCase();
+      return `
+      <article class="tx-edit-card" data-stl-idx="${idx}">
+        <div class="tx-edit-top">
+          <h3>STL ${idx + 1}</h3>
+          <button type="button" class="danger" data-remove-stl="${idx}">Remove</button>
+        </div>
+        <div class="form-grid">
+          ${field("ID", `stl.${idx}.id`, device.id || "")}
+          ${field("Name", `stl.${idx}.name`, device.name || "")}
+          <label class="form-field">
+            <span>Model</span>
+            <select name="stl.${idx}.model">
+              <option value="hdlink" ${model === "hdlink" ? "selected" : ""}>HD Link</option>
+              <option value="iplink" ${model === "iplink" ? "selected" : ""}>IP Link</option>
+              <option value="comrex" ${model === "comrex" ? "selected" : ""}>Comrex</option>
+              <option value="briclink" ${model === "briclink" ? "selected" : ""}>BRIC-Link</option>
+              <option value="instream" ${model === "instream" ? "selected" : ""}>Instream</option>
+            </select>
+          </label>
+          ${field("Host", `stl.${idx}.host`, device.host || "")}
+          ${field("Location", `stl.${idx}.location`, device.location || "")}
+          ${field("SNMP community", `stl.${idx}.snmp_community`, device.snmp_community || "", "password")}
+          ${field("SNMP port", `stl.${idx}.snmp_port`, device.snmp_port ?? 161, "number")}
+          ${field("Web password", `stl.${idx}.http_password`, device.http_password || "", "password")}
+          ${field("Related transmitter id", `stl.${idx}.related_tx_id`, device.related_tx_id || "")}
+          ${field("Error-rate threshold", `stl.${idx}.alerts.error_rate`, overrides.error_rate ?? "", "number", "step=0.01")}
+        </div>
+      </article>`;
+    })
+    .join("");
+
+  root.querySelectorAll("[data-remove-stl]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.getAttribute("data-remove-stl"));
+      const devicesNow = collectStlFromForm();
+      devicesNow.splice(idx, 1);
+      renderStlEditor(devicesNow);
+    });
+  });
+}
+
+function collectStlFromForm() {
+  const devices = [];
+  document.querySelectorAll("[data-stl-idx]").forEach((card) => {
+    const idx = card.getAttribute("data-stl-idx");
+    const alerts = {};
+    const rate = optFloat(readInput(`stl.${idx}.alerts.error_rate`, card));
+    if (rate != null) alerts.error_rate = rate;
+    const id = String(readInput(`stl.${idx}.id`, card) || "").trim();
+    if (!id) return;
+    devices.push({
+      id,
+      name: String(readInput(`stl.${idx}.name`, card) || "").trim(),
+      model: String(readInput(`stl.${idx}.model`, card) || "hdlink").trim(),
+      host: String(readInput(`stl.${idx}.host`, card) || "").trim(),
+      location: String(readInput(`stl.${idx}.location`, card) || "").trim(),
+      snmp_community: String(readInput(`stl.${idx}.snmp_community`, card) || "public"),
+      snmp_port: Number(readInput(`stl.${idx}.snmp_port`, card) || 161),
+      http_password: String(readInput(`stl.${idx}.http_password`, card) || ""),
+      related_tx_id: String(readInput(`stl.${idx}.related_tx_id`, card) || "").trim(),
+      alerts,
+    });
+  });
+  return devices;
+}
+
+function stlIdFromPath() {
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  return parts[0] === "stl" && parts[1] ? decodeURIComponent(parts[1]) : "";
+}
+
+function stlCardMeters(device) {
+  return (device.meters || [])
+    .filter((meter) => meter.value != null && meter.category !== "link" && meter.category !== "alarm")
+    .slice(0, 4);
+}
+
+function renderStlCard(device) {
+  const alarmClass = device.active_alarm_count ? "alarm-count" : "alarm-count zero";
+  const meters = stlCardMeters(device)
+    .map(
+      (meter) => `
+      <div class="meter">
+        <dt>${escapeHtml(meter.label)}</dt>
+        <dd>${fmtMeter(meter.value, meter.unit)}</dd>
+      </div>`
+    )
+    .join("");
+  const err = device.error
+    ? `<div class="error-text">${escapeHtml(device.error)}</div>`
+    : "";
+  return `
+    <article class="tx-card">
+      <div class="tx-card-top">
+        <div>
+          <h2><a class="tx-name-btn" href="/stl/${encodeURIComponent(device.stl_id)}">${escapeHtml(device.name)}</a></h2>
+          <div class="tx-meta">${escapeHtml(device.model_label || device.model)}
+            ${device.location ? " · " + escapeHtml(device.location) : ""}
+            ${device.host ? " · " + escapeHtml(device.host) : ""}
+          </div>
+        </div>
+        ${statusBadge(device.status)}
+      </div>
+      <dl class="meters">
+        <div class="meter"><dt>Link</dt><dd>${escapeHtml(device.link_label || device.link_state || "—")}</dd></div>
+        ${meters}
+      </dl>
+      ${err}
+      <div class="tx-footer">
+        <span class="${alarmClass}">${device.active_alarm_count} alarm${device.active_alarm_count === 1 ? "" : "s"}</span>
+        <span>${fmtTime(device.timestamp)}</span>
+      </div>
+    </article>`;
+}
+
+function renderStlSummary(summary) {
+  const el = document.getElementById("summary");
+  if (!el || !summary) return;
+  el.innerHTML = [
+    ["STL", summary.total],
+    ["Online", summary.online],
+    ["Degraded", summary.degraded],
+    ["Offline", summary.offline],
+    ["Alarms", summary.active_alarms],
+  ]
+    .map(
+      ([label, value]) => `
+      <div class="summary-card">
+        <div class="label">${label}</div>
+        <div class="value">${value}</div>
+      </div>`
+    )
+    .join("");
+}
+
+function renderStlList(data) {
+  renderStlSummary(data.summary);
+  renderAlerts(data.alerts);
+  const grid = document.getElementById("stl-fleet");
+  if (!grid) return;
+  if (!data.devices?.length) {
+    grid.innerHTML = `<p class="empty">No STL links configured. Add one in Settings.</p>`;
+    return;
+  }
+  grid.innerHTML = data.devices.map((device) => renderStlCard(device)).join("");
+}
+
+async function loadStlList() {
+  const data = await fetchJson("/api/stl");
+  renderStlList(data);
+  const updated = document.getElementById("updated");
+  if (updated) updated.textContent = `Updated ${fmtTime(new Date().toISOString())}`;
+}
+
+function renderStlDetail(device) {
+  const title = document.getElementById("stl-title");
+  if (title) title.textContent = device.name;
+  const sub = document.getElementById("stl-subtitle");
+  if (sub) {
+    sub.textContent = [
+      device.model_label || device.model,
+      device.host,
+      device.location,
+      device.link_label || device.link_state,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  }
+  const err = document.getElementById("stl-error");
+  if (err) {
+    err.hidden = !device.error;
+    err.textContent = device.error || "";
+  }
+  const meters = document.getElementById("stl-meters");
+  if (meters) {
+    const items = (device.meters || [])
+      .map(
+        (meter) => `
+        <div class="meter-big">
+          <dt>${escapeHtml(meter.label)}</dt>
+          <dd>${fmtMeter(meter.value, meter.unit)}</dd>
+        </div>`
+      )
+      .join("");
+    meters.innerHTML = `<dl class="meter-row">${items || "<p class='empty'>No meters.</p>"}</dl>`;
+  }
+  const alarms = document.getElementById("stl-alarms");
+  if (alarms) {
+    const active = (device.alarms || []).filter((alarm) => alarm.active);
+    alarms.innerHTML = active.length
+      ? active.map((alarm) => `<li>${escapeHtml(alarm.label)}</li>`).join("")
+      : `<li class="empty">No active STL alarms.</li>`;
+  }
+}
+
+function drawStlCharts(points, device) {
+  const grid = document.getElementById("chart-grid");
+  if (!grid) return;
+  const numeric = (device.meters || []).filter(
+    (meter) => typeof meter.value === "number" && meter.category !== "link" && meter.category !== "alarm"
+  );
+  const charts = numeric.filter((meter) => seriesHasData(points, meter.key));
+  if (!charts.length) {
+    grid.innerHTML = `<p class="empty">No numeric STL history for this range yet.</p>`;
+    return;
+  }
+  grid.innerHTML = charts
+    .map(
+      (meter, idx) => `
+      <div class="chart-wrap">
+        <p class="sub" style="margin-bottom:0.35rem">${escapeHtml(meter.label)}</p>
+        <canvas id="chart-${escapeHtml(meter.key)}" height="180" data-key="${escapeHtml(meter.key)}" data-color="${CHART_COLORS[idx % CHART_COLORS.length]}"></canvas>
+      </div>`
+    )
+    .join("");
+  for (const meter of charts) {
+    const canvas = document.getElementById(`chart-${meter.key}`);
+    if (!canvas) continue;
+    drawChart(canvas, points, meter.key, canvas.dataset.color || "#3b82f6");
+  }
+}
+
+async function loadStlHistory(stlId, range, device) {
+  const data = await fetchJson(
+    `/api/stl/${encodeURIComponent(stlId)}/history?range=${range}`
+  );
+  drawStlCharts(data.points || [], device);
+}
+
+async function initStlPage() {
+  const stlId = stlIdFromPath();
+  const list = document.getElementById("stl-fleet");
+  const summary = document.getElementById("summary");
+  const detail = document.getElementById("stl-detail");
+
+  if (!stlId) {
+    if (detail) detail.hidden = true;
+    document.getElementById("refresh-btn")?.addEventListener("click", () => {
+      fetchJson("/api/stl/poll", { method: "POST" })
+        .then((data) => {
+          renderStlList(data);
+          const updated = document.getElementById("updated");
+          if (updated) updated.textContent = `Updated ${fmtTime(new Date().toISOString())}`;
+        })
+        .catch((err) => showToast("Poll failed", err.message || String(err), true));
+    });
+    await loadStlList();
+    setInterval(() => loadStlList().catch(console.error), 15000);
+    return;
+  }
+
+  if (list) list.hidden = true;
+  if (summary) summary.hidden = true;
+  if (detail) detail.hidden = false;
+  let range = "24h";
+  let latest = null;
+  document.querySelectorAll("#stl-range-tabs button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      range = btn.dataset.range;
+      document.querySelectorAll("#stl-range-tabs button").forEach((item) => {
+        item.classList.toggle("active", item === btn);
+      });
+      if (latest) loadStlHistory(stlId, range, latest).catch(console.error);
+    });
+  });
+  const refresh = async () => {
+    latest = await fetchJson(`/api/stl/${encodeURIComponent(stlId)}/poll`, { method: "POST" });
+    renderStlDetail(latest);
+    const alerts = await fetchJson("/api/alerts");
+    renderAlerts(alerts);
+    await loadStlHistory(stlId, range, latest);
+    const updated = document.getElementById("updated");
+    if (updated) updated.textContent = `Updated ${fmtTime(new Date().toISOString())}`;
+  };
+  document.getElementById("refresh-btn")?.addEventListener("click", () => {
+    refresh().catch((err) => showToast("Poll failed", err.message || String(err), true));
+  });
+  latest = await fetchJson(`/api/stl/${encodeURIComponent(stlId)}`);
+  renderStlDetail(latest);
+  const alerts = await fetchJson("/api/alerts");
+  renderAlerts(alerts);
+  await loadStlHistory(stlId, range, latest);
+  setInterval(() => {
+    fetchJson(`/api/stl/${encodeURIComponent(stlId)}`)
+      .then((device) => {
+        latest = device;
+        renderStlDetail(device);
+        return fetchJson("/api/alerts");
+      })
+      .then((alerts) => renderAlerts(alerts))
+      .catch(console.error);
+  }, 15000);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -1029,4 +1358,5 @@ document.addEventListener("DOMContentLoaded", () => {
   if (page === "wall") initWallPage().catch(console.error);
   if (page === "detail") initDetailPage().catch(console.error);
   if (page === "settings") initSettingsPage().catch(console.error);
+  if (page === "stl") initStlPage().catch(console.error);
 });

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>STL — ASMG TX Dashboard</title>
+  <link rel="stylesheet" href="/static/styles.css?v=13">
+</head>
+<body data-page="stl">
+  <div class="container">
+    <header>
+      <div>
+        <div class="breadcrumb"><a href="/">← Fleet</a></div>
+        <h1 id="stl-title">STL links</h1>
+        <p class="sub" id="stl-subtitle">HD Link, IP Link, Comrex, BRIC-Link, and Inovonics Instream. Not part of the transmitter fleet.</p>
+      </div>
+      <div class="actions">
+        <span id="updated" class="sub"></span>
+        <a class="btn" href="/wall">Wall view</a>
+        <a class="btn" href="/settings">Settings</a>
+        <button id="refresh-btn" class="primary" type="button">Poll now</button>
+      </div>
+    </header>
+
+    <section id="alert-banner" class="alert-banner" aria-live="polite">
+      <div class="alert-banner-top">
+        <h2>Active alerts</h2>
+      </div>
+      <ul id="alert-list"></ul>
+    </section>
+
+    <section id="summary" class="summary" aria-label="STL summary"></section>
+    <section id="stl-fleet" class="grid" aria-label="STL links"></section>
+
+    <section id="stl-detail" hidden>
+      <p id="stl-error" class="error-text" hidden></p>
+      <section class="panel">
+        <h2>Meters</h2>
+        <div id="stl-meters" class="meter-groups"></div>
+      </section>
+      <section class="panel">
+        <h2>Alarms</h2>
+        <ul id="stl-alarms" class="alarms"></ul>
+      </section>
+      <section class="panel">
+        <h2>History</h2>
+        <div class="range-tabs" id="stl-range-tabs">
+          <button type="button" data-range="1h">1h</button>
+          <button type="button" class="active" data-range="24h">24h</button>
+          <button type="button" data-range="7d">7d</button>
+          <button type="button" data-range="30d">30d</button>
+        </div>
+        <div id="chart-grid" class="chart-grid"></div>
+      </section>
+    </section>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <div class="title" id="toast-title"></div>
+    <div class="body" id="toast-body"></div>
+  </div>
+  <script src="/static/app.js?v=13"></script>
+</body>
+</html>
